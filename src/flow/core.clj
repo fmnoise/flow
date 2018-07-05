@@ -67,3 +67,17 @@
   "Value-first version of `thru`"
   [value handler]
   (thru handler value))
+
+(defmacro flet*
+  [bindings & body]
+  (if-let [[bind-name expression] (first bindings)]
+    `(let [result# ~(call expression)]
+       (->> result#
+            (then (fn [~bind-name]
+                    (flet* ~(rest bindings) ~@body)))))
+    `(do ~@body)))
+
+(defmacro flet
+  "Enables common Clojure let syntax using bindings for processing with flow"
+  [bindings & body]
+  `(flet* ~(partition 2 bindings) ~@body))
