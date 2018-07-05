@@ -21,12 +21,12 @@
   (if (err? value) (throw value) value))
 
 (defn then
-  "If value is not an exception, applies f to it wrapped in `run`, otherwise returns value"
+  "If value is not an exception, applies f to it wrapped in `call`, otherwise returns value"
   [handler value]
   (if (err? value) value (call (handler value))))
 
 (defn else
-  "If value is an exception of ex-class(optional), applies handler to it wrapped in `run`, otherwise returns value"
+  "If value is an exception of ex-class(optional), applies handler to it wrapped in `call`, otherwise returns value"
   ([handler value]
    (if (err? value) (call (handler value)) value))
   ([ex-class handler value]
