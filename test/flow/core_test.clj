@@ -33,7 +33,7 @@
 
 (defn persist-changes-flet [id data]
   (flet [entity (find-entity id)
-         updated-entity (update-entity identity)
+         updated-entity (update-entity entity data)
          formatted-resp (format-response updated-entity)
          _ (notify-slack-success)]
         formatted-resp))
@@ -48,6 +48,9 @@
            (persist-changes nil {:department "IT"})))))
 
 (deftest flet-test
-  (testing "flet workflow"
+  (testing "flet successful workflow"
     (is (= {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
-           (persist-changes 123 {:department "IT"})))))
+           (persist-changes-flet 123 {:department "IT"}))))
+
+  (testing "flet failure workflow"
+    (is (err? (persist-changes-flet nil {:department "IT"})))))
