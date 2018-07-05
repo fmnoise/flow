@@ -11,7 +11,7 @@
   ([msg data err] (ex-info msg data err)))
 
 (defmacro run
-  "Executes body in `try` block, returning exception instance if exception thrown"
+  "Executes body in `try` block. If exception thrown during execution, returns it, otherwise returns value of body"
   [body]
   `(try ~body (catch java.lang.Throwable ~'e ~'e)))
 
@@ -21,16 +21,16 @@
   (if (err? value) (throw value) value))
 
 (defn then
-  "If value is not an exception, applies f to it wrapped in `try'`, otherwise returns value"
+  "If value is not an exception, applies f to it wrapped in `run`, otherwise returns value"
   [value f]
-  (if (err? value) value (try' (f value))))
+  (if (err? value) value (run (f value))))
 
 (defn else
-  "If value is an exception of ex-class(optional) applies handler to it wrapped in try', otherwise returns value"
+  "If value is an exception of ex-class(optional), applies handler to it wrapped in `run`, otherwise returns value"
   ([value handler]
-   (if (err? value) (try' (handler value)) value))
+   (if (err? value) (run (handler value)) value))
   ([value ex-class handler]
-   (if (isa? (class value) ex-class) (try' (handler value)) value)))
+   (if (isa? (class value) ex-class) (run (handler value)) value)))
 
 (defn either
   "If value is an exception, returns default, otherwise returns value"
