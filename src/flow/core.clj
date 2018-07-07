@@ -13,7 +13,8 @@
 (defmacro call
   "Executes body in `try` block. If exception thrown during execution, returns it, otherwise returns value of body"
   [& body]
-  `(try ~@body (catch *base-class* ~'e ~'e)))
+  (let [base-class *base-class*]
+    `(try ~@body (catch ~base-class ~'e ~'e))))
 
 (defn raise
   "If value is an exception, throws it, otherwise returns value"
