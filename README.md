@@ -94,7 +94,7 @@ Let's rewrite previous example:
 ```clojure
 (defn perform-update [id updates]
   (f/flet [entity (find-entity id)
-           updated-entity (update-entity entity data)]
+           updated-entity (update-entity entity updates)]
     (format-response updated-entity)))
 
 (defn persist-changes [id updates]
