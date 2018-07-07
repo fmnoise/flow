@@ -1,4 +1,4 @@
-# flow
+# flow [![CircleCI](https://circleci.com/gh/dawcs/flow/tree/master.svg?style=svg)](https://circleci.com/gh/dawcs/flow/tree/master)
 
 Handling exceptions in functional way
 
