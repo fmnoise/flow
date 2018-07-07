@@ -1,5 +1,7 @@
 (ns flow.core)
 
+(def ^:dynamic *base-class* java.lang.Throwable)
+
 (defn err? [value]
   (isa? (class value) java.lang.Throwable))
 
@@ -11,7 +13,7 @@
 (defmacro call
   "Executes body in `try` block. If exception thrown during execution, returns it, otherwise returns value of body"
   [& body]
-  `(try ~@body (catch java.lang.Throwable ~'e ~'e)))
+  `(try ~@body (catch *base-class* ~'e ~'e)))
 
 (defn raise
   "If value is an exception, throws it, otherwise returns value"
