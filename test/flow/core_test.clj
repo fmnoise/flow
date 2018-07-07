@@ -2,55 +2,152 @@
   (:require [clojure.test :refer :all]
             [flow.core :refer :all]))
 
-;; some example dummy code
-(defn find-entity [id]
-  (if (some? id)
-    {:id id :name "Jack" :role :admin}
-    (fail "User not found" {:id id})))
+(deftest err?-test
+  (testing "err? with non-exception argument"
+    (false? (err? 42)))
 
-(defn update-entity [entity data]
-  (merge entity data))
+  (testing "err? with exception argument"
+    (true? (err? (Exception. "Oops")))))
 
-(defn notify-slack-success []
-  (prn "Slack success notification"))
+(deftest call-test
+  (testing "call without exception"
+    (= (call (+ 1 41)) 42))
 
-(defn notify-slack-error [err]
-  (prn "Slack error notification"))
+  (testing "call with exception should return an instance of exception"
+    (isa? (call (class (throw (Exception. "Oops")))) java.lang.Throwable)))
 
-(defn format-response [data]
-  {:status 200 :entity data})
+(deftest raise-test
+  (testing "raise with non-exception argument"
+    (= (raise 42) 42))
 
-(defn format-error [{:keys [cause data]}]
-  {:status 500 :error cause :context data})
+  (testing "raise with exception argument should throw an exception"
+    (is (thrown? java.lang.Throwable (raise (Exception. "Oops"))))))
 
-;; pipeline
-(defn persist-changes [id data]
-  (->> (call (find-entity id))
-       (then #(update-entity % data))
-       (then format-response)
-       (thru notify-slack-error)
-       (else (comp format-error Throwable->map))))
+(deftest then-test
+  (testing "then with non-exception argument"
+    (= (then identity 42) 42))
 
-(defn persist-changes-flet [id data]
-  (flet [entity (find-entity id)
-         updated-entity (update-entity entity data)
-         formatted-resp (format-response updated-entity)
-         _ (notify-slack-success)]
-        formatted-resp))
+  (testing "then with exception argument"
+    (= (then (constantly "Exception handler")
+             (Exception. "Oops"))
+       "Exception handler")))
 
-(deftest a-test
-  (testing "ok"
-    (is (= {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
-           (persist-changes 123 {:department "IT"}))))
+(deftest then>-test
+  (testing "then> with non-exception argument"
+    (= (then 42 identity) 42))
 
-  (testing "fail"
-    (is (= {:status 500, :error "User not found", :context {:id nil}}
-           (persist-changes nil {:department "IT"})))))
+  (testing "then> with exception argument"
+    (= (then (Exception. "Oops")
+             (constantly "Exception handler"))
+       "Exception handler")))
+
+(deftest else-test
+  (testing "else with non-exception argument"
+    (= (else (constantly "Exception handler") 42) 42))
+
+  (testing "else with exception argument without class specification"
+    (= (else (constantly "Exception handler")
+             (Exception. "Oops"))
+       "Exception handler"))
+
+  (testing "else with exception argument and class specification equal to exception class"
+    (= (else java.lang.NullPointerException
+             (constantly "Exception handler")
+             (java.lang.NullPointerException. "Oops"))
+       "Exception handler"))
+
+  (testing "else with exception argument and class specification non-equal to exception class"
+    (isa? (class (else java.lang.NullPointerException
+                       (constantly "Exception handler")
+                       (java.lang.UnsupportedOperationException. "Oops")))
+          java.lang.UnsupportedOperationException)))
+
+(deftest else>-test
+  (testing "else> with non-exception argument"
+    (= (else> 42 (constantly "Exception handler"))))
+
+  (testing "else> with exception argument without class specification"
+    (= (else> (Exception. "Oops")
+              (constantly "Exception handler"))
+       "Exception handler"))
+
+  (testing "else> with exception argument and class specification equal to exception class"
+    (= (else> (java.lang.NullPointerException. "Oops")
+              java.lang.NullPointerException
+              (constantly "Exception handler"))
+       "Exception handler"))
+
+  (testing "else> with exception argument and class specification non-equal to exception class"
+    (isa? (class (else> (java.lang.UnsupportedOperationException. "Oops")
+                        java.lang.NullPointerException
+                        (constantly "Exception handler")))
+          java.lang.UnsupportedOperationException)))
+
+(deftest thru-test
+  (testing "thru with non-exception argument"
+    (= (thru identity 42) 42))
+
+  (testing "thru with exception argument without class specification"
+    (= (thru (constantly "Exception handler")
+             (Exception. "Oops"))
+       "Exception handler"))
+
+  (testing "thru with exception argument with class specification equal to exception class"
+    (= (thru java.lang.NullPointerException
+             (constantly "Exception handler")
+             (java.lang.NullPointerException. "Oops"))
+       "Exception handler"))
+
+  (testing "thru with exception argument with class specification non- equal to exception class"
+    (isa? (class (thru java.lang.NullPointerException
+                       (constantly "Exception handler")
+                       (java.lang.UnsupportedOperationException. "Oops")))
+          java.lang.UnsupportedOperationException)))
+
+(deftest thru>-test
+  (testing "thru> with non-exception argument"
+    (= (thru> 42 identity) 42))
+
+  (testing "thru> with exception argument without class specification"
+    (= (thru> (Exception. "Oops")
+             (constantly "Exception handler"))
+       "Exception handler"))
+
+  (testing "thru with exception argument with class specification equal to exception class"
+    (= (thru> (java.lang.NullPointerException. "Oops")
+              java.lang.NullPointerException
+              (constantly "Exception handler"))
+       "Exception handler"))
+
+  (testing "thru with exception argument with class specification non- equal to exception class"
+    (isa? (class (thru> java.lang.NullPointerException
+                        (constantly "Exception handler")
+                        (java.lang.UnsupportedOperationException. "Oops")))
+          java.lang.UnsupportedOperationException)))
+
+(deftest either-test
+  (testing "either with non-exception argument"
+    (= (either "Exception" 42) 42))
+
+  (testing "either with exception argument"
+    (= (either "Exception" (Exception. "Oops")) "Exception")))
+
+(deftest either>-test
+  (testing "either> with non-exception argument"
+    (= (either> 42 "Exception") 42))
+
+  (testing "either> with exception argument"
+    (= (either> (Exception. "Oops") "Exception") "Exception")))
 
 (deftest flet-test
-  (testing "flet successful workflow"
-    (is (= {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
-           (persist-changes-flet 123 {:department "IT"}))))
+  (testing "flet with no exception"
+   (= (flet [x (+ 1 2)
+             y (+ x 39)]
+            y)
+      42))
 
-  (testing "flet failure workflow"
-    (is (err? (persist-changes-flet nil {:department "IT"})))))
+  (testing "flet with exception"
+    (isa? (class (flet [x (+ 1 2)
+                        y (/ x 0)]
+                       y))
+          java.lang.Throwable)))
