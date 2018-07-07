@@ -30,7 +30,9 @@
   ([handler value]
    (if (err? value) (call (handler value)) value))
   ([ex-class handler value]
-   (if (isa? (class value) ex-class) (call (handler value)) value)))
+   (if-not (isa? ex-class java.lang.Throwable)
+     (throw (java.lang.IllegalArgumentException. "ex-class argument should be a proper Exception class"))
+     (if (isa? (class value) ex-class) (call (handler value)) value))))
 
 (defn either
   "If value is an exception, returns default, otherwise returns value"
@@ -43,8 +45,11 @@
    (when (err? value) (handler value))
    value)
   ([ex-class handler value]
-   (when (isa? (class value) ex-class) (handler value))
-   value))
+   (if-not (isa? ex-class java.lang.Throwable)
+     (throw (java.lang.IllegalArgumentException. "ex-class argument should be a proper Exception class"))
+     (do
+       (when (isa? (class value) ex-class) (handler value))
+       value))))
 
 (defn then>
   "Value-first version of `then`"
