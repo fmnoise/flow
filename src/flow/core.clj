@@ -54,7 +54,7 @@
   ([value handler]
    (else handler value))
   ([value ex-class handler]
-   (else value ex-class handler)))
+   (else ex-class handler value)))
 
 (defn either>
   "Value-first version of `either`"
