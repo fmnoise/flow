@@ -33,7 +33,7 @@ Let's add some flow to it:
      (f/else dangerous-fallback-action)
      (f/either default-value))
 ```
-`call` is starting point to flow, it's a macro which wraps given code to try/catch block and returns either caught exception instance or block evaluation result, each next flow function works with exception instance as a value, so instead of throwing it, it just returns it:
+`call` is starting point to flow, it's a macro which wraps given code to try/catch block and returns either caught exception instance or block evaluation result, each next flow function works with exception instance as a value, so instead of throwing it, it just returns it.
 
 `then` applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception.
 
@@ -42,6 +42,7 @@ Let's add some flow to it:
 `either` works similar to else, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument.
 
 Another useful functions are `raise` and `thru`:
+
 `raise` accepts 1 agrument and in case of exception given, throws it, otherwise simply returns given argument.
 
 `thru` accepts value and function, and applies function to value if value is an exception. Difference with `else` is that `thru` always returns given value, so function is called only for side-effects(like error logging).
