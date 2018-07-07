@@ -1,7 +1,5 @@
 (ns flow.core)
 
-;; TODO let, flow->, flow->>
-
 (defn err? [value]
   (isa? (class value) java.lang.Throwable))
 
@@ -81,3 +79,4 @@
   "Enables common Clojure let syntax using bindings for processing with flow"
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
+
