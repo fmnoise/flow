@@ -98,7 +98,7 @@
              (java.lang.NullPointerException. "Oops"))
        "Exception handler"))
 
-  (testing "thru with exception argument with class specification non- equal to exception class"
+  (testing "thru with exception argument with class specification non-equal to exception class"
     (isa? (class (thru java.lang.NullPointerException
                        (constantly "Exception handler")
                        (java.lang.UnsupportedOperationException. "Oops")))
@@ -119,7 +119,7 @@
               (constantly "Exception handler"))
        "Exception handler"))
 
-  (testing "thru with exception argument with class specification non- equal to exception class"
+  (testing "thru with exception argument with class specification non-equal to exception class"
     (isa? (class (thru> (java.lang.UnsupportedOperationException. "Oops")
                         java.lang.NullPointerException
                         (constantly "Exception handler")))
