@@ -53,7 +53,7 @@
   "Value-first version of `else`"
   ([value handler]
    (else handler value))
-  ([ex-class handler value]
+  ([value ex-class handler]
    (else value ex-class handler)))
 
 (defn either>
@@ -63,8 +63,10 @@
 
 (defn thru>
   "Value-first version of `thru`"
-  [value handler]
-  (thru handler value))
+  ([value handler]
+   (thru handler value))
+  ([value ex-class handler]
+   (thru ex-class handler value)))
 
 (defmacro flet*
   [bindings & body]
