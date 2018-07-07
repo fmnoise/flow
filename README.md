@@ -19,7 +19,7 @@ Not too readable, maybe threading macro can help?
 (-> (dangerous-action)
     (next-dangerous-action)
     (try catch Exception e (fallback-action e))
-    (try catch Exception _ default-value)
+    (try catch Exception _ default-value))
 ```
 
 Looks more readable, but still clunky.
