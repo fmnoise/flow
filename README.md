@@ -13,17 +13,7 @@ Consider trivial example:
     (try (dangerous-fallback-action e)
       (catch Exception _ default-value))))
 ```
-Not too readable, maybe threading macro can help?
-
-```clojure
-(-> (dangerous-action)
-    (next-dangerous-action)
-    (try catch Exception e (fallback-action e))
-    (try catch Exception _ default-value))
-```
-
-Looks more readable, but still clunky.
-Let's add some flow to it:
+Not too readable. Let's add some flow to it:
 
 ```clojure
 (require '[flow.core as f])
