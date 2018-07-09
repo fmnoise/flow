@@ -60,7 +60,13 @@
     (isa? (class (else java.lang.NullPointerException
                        (constantly "Exception handler")
                        (java.lang.UnsupportedOperationException. "Oops")))
-          java.lang.UnsupportedOperationException)))
+          java.lang.UnsupportedOperationException))
+
+  (testing "else with exeption argument of non-exeption class"
+    (is (thrown? java.lang.IllegalArgumentException
+                 (else java.lang.String
+                       (constantly "Exception handler")
+                       (java.lang.UnsupportedOperationException. "Oops"))))))
 
 (deftest else>-test
   (testing "else> with non-exception argument"
@@ -102,7 +108,13 @@
     (isa? (class (thru java.lang.NullPointerException
                        (constantly "Exception handler")
                        (java.lang.UnsupportedOperationException. "Oops")))
-          java.lang.UnsupportedOperationException)))
+          java.lang.UnsupportedOperationException))
+
+  (testing "thru with exception argument of non-exception class"
+    (is (thrown? java.lang.IllegalArgumentException
+                 (thru java.lang.String
+                       (constantly "Exception handler")
+                       (java.lang.UnsupportedOperationException. "Oops"))))))
 
 (deftest thru>-test
   (testing "thru> with non-exception argument"
