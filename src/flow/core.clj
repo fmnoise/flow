@@ -1,20 +1,36 @@
 (ns flow.core)
 
-(def ^:dynamic *base-class* java.lang.Throwable)
+(def ^:dynamic *exception-base-class*
+  "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"
+  java.lang.Throwable)
 
-(defn err? [value]
+(defn err?
+  "Checks if value is Throwable"
+  [value]
   (isa? (class value) java.lang.Throwable))
 
 (defn fail
+  "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
   ([msg] (fail msg {}))
-  ([msg data] (ex-info msg data))
-  ([msg data err] (ex-info msg data err)))
+  ([msg data] (ex-info msg (if (map? data) data {::context data})))
+  ([msg data cause] (ex-info msg data cause)))
 
 (defmacro call
-  "Executes body in `try` block. If exception thrown during execution, returns it, otherwise returns value of body"
+  "Executes body in `try` block. When caught an exception
+  which class is `*exception-base-class*`(defaults to `Throwable`) or a subclass of it,
+  returns it, otherwise `throw`s it. Returns value of body if no exception has caught"
   [& body]
-  (let [base-class *base-class*]
-    `(try ~@body (catch ~base-class ~'e ~'e))))
+  `(try ~@body
+     (catch java.lang.Throwable t#
+       (if (isa? (class t#) *exception-base-class*)
+         t#
+         (throw t#)))))
+
+(defmacro catching
+  "Executes body with `*exception-base-class*` bound to given class"
+  [exception-base-class & body]
+  `(binding [*exception-base-class* ~exception-base-class]
+     ~@body))
 
 (defn raise
   "If value is an exception, throws it, otherwise returns value"
@@ -89,4 +105,3 @@
   "Enables common Clojure let syntax using bindings for processing with flow"
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
-
