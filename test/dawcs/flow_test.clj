@@ -303,18 +303,18 @@
   (testing "with no exception"
     (is (= (flet [x (+ 1 2)
                   y (+ x 39)]
-                 y)
+             y)
            42)))
 
   (testing "with exception in bindings"
     (is (fail? (flet [x (+ 1 2)
-                     y (/ x 0)]
-                    y))))
+                      y (/ x 0)]
+                 y))))
 
   (testing "with exception in body"
     (is (fail? (flet [x (+ 1 2)
-                     y 0]
-                    (/ x y))))))
+                      y 0]
+                 (/ x y))))))
 
 (deftest base-exception-class--test
   (testing "call with changed *base-exception-class*"
