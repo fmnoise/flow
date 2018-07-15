@@ -1,6 +1,6 @@
-(ns flow.core-test
+(ns dawcs.flow.core-test
   (:require [clojure.test :refer :all]
-            [flow.core :refer :all]))
+            [dawcs.flow.core :refer :all]))
 
 (deftest fail?--test
   (testing "fail? with non-exception argument"
