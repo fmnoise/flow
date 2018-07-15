@@ -1,4 +1,4 @@
-(ns dawcs.flow.core)
+(ns dawcs.flow)
 
 (def ^:dynamic *exception-base-class*
   "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"

@@ -16,7 +16,7 @@ Consider trivial example:
 Not too readable. Let's add some flow to it:
 
 ```clojure
-(requre '[dawcs.flow.core :refer :all])
+(requre '[dawcs.flow :refer :all])
 
 (->> (call (dangerous-action))
      (then next-dangerous-action)
