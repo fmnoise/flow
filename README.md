@@ -129,7 +129,8 @@ Let's rewrite previous example:
        (thru notify-slack)
        (else (comp format-error Throwable->map))))
 ```
-That's it! More info in docscrings.
+
+For more info look https://dawcs.github.io/flow
 
 
 ## License
