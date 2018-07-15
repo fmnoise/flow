@@ -59,7 +59,7 @@ or locally using `catching` macro:
 (->> (call (/ 0 1)) (else (comp :cause Throwable->map))) => 0
 ```
 
-**either** works similar to else, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument, so `(either default x)` is just a sugar for `(else (constantly default) x)`
+**either** works similar to `else`, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument, so `(either default x)` is just a sugar for `(else (constantly default) x)`
 ```clojure
 (->> (call (/ 1 0)) (either 2)) ;; => 2
 (->> (call (/ 0 1)) (either 2)) ;; => 0
