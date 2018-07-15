@@ -4,7 +4,7 @@
   "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"
   java.lang.Throwable)
 
-(defn err?
+(defn fail?
   "Checks if value is Throwable"
   [value]
   (isa? (class value) java.lang.Throwable))
@@ -14,6 +14,12 @@
   ([msg] (fail msg {}))
   ([msg data] (ex-info msg (if (map? data) data {::context data})))
   ([msg data cause] (ex-info msg data cause)))
+
+(defn fail!
+  "Creates new `ex-info` instance with given msg, data(optional) and cause(optional) and throws it"
+  ([msg] (fail! msg {}))
+  ([msg data] (throw (ex-info msg (if (map? data) data {::context data}))))
+  ([msg data cause] (throw (ex-info msg data cause))))
 
 (defmacro call
   "Executes body in `try` block. When caught an exception
@@ -35,17 +41,17 @@
 (defn raise
   "If value is an exception, throws it, otherwise returns value"
   [value]
-  (if (err? value) (throw value) value))
+  (if (fail? value) (throw value) value))
 
 (defn then
   "If value is not an exception, applies f to it wrapped in `call`, otherwise returns value"
   [handler value]
-  (if (err? value) value (call (handler value))))
+  (if (fail? value) value (call (handler value))))
 
 (defn else
   "If value is an exception of ex-class(optional), applies handler to it wrapped in `call`, otherwise returns value"
   ([handler value]
-   (if (err? value) (call (handler value)) value))
+   (if (fail? value) (call (handler value)) value))
   ([ex-class handler value]
    (if-not (isa? ex-class java.lang.Throwable)
      (throw (java.lang.IllegalArgumentException. "ex-class argument should be a proper Exception class"))
@@ -54,12 +60,12 @@
 (defn either
   "If value is an exception, returns default, otherwise returns value"
   [default value]
-  (if (err? value) default value))
+  (if (fail? value) default value))
 
 (defn thru
   "If value is an exception of ex-class(optional), calls handler on it (for side effects). Returns value"
   ([handler value]
-   (when (err? value) (handler value))
+   (when (fail? value) (handler value))
    value)
   ([ex-class handler value]
    (if-not (isa? ex-class java.lang.Throwable)

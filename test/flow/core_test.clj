@@ -2,19 +2,19 @@
   (:require [clojure.test :refer :all]
             [flow.core :refer :all]))
 
-(deftest err?--test
-  (testing "err? with non-exception argument"
-    (is (not (err? 42))))
+(deftest fail?--test
+  (testing "fail? with non-exception argument"
+    (is (not (fail? 42))))
 
-  (testing "err? with exception argument"
-    (is (err? (Exception. "Oops")))))
+  (testing "fail? with exception argument"
+    (is (fail? (Exception. "Oops")))))
 
 (deftest call--test
   (testing "call without exception"
     (is (= (call (+ 1 41)) 42)))
 
   (testing "call with exception should return an instance of exception"
-    (is (err? (call (throw (Exception. "Oops")))))))
+    (is (fail? (call (throw (Exception. "Oops")))))))
 
 (deftest raise--test
   (testing "raise with non-exception argument"
@@ -178,12 +178,12 @@
            42)))
 
   (testing "flet with exception in bindings"
-    (is (err? (flet [x (+ 1 2)
+    (is (fail? (flet [x (+ 1 2)
                      y (/ x 0)]
                     y))))
 
   (testing "flet with exception in body"
-    (is (err? (flet [x (+ 1 2)
+    (is (fail? (flet [x (+ 1 2)
                      y 0]
                     (/ x y))))))
 
