@@ -113,7 +113,7 @@ Another "real-life" example:
 ;; => {:status 500, :error "User not found", :context {:id nil}}
 ```
 
-This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one).
+This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there are `fail!` which throws created `clojure.lang.ExceptionInfo` and `fail?` which checks if given value class is subclass of `Throwable`.
 
 And final secret weapon of `flow` is **flet** - exception-aware version of Clojure `let`.
 Let's rewrite previous example:
@@ -121,7 +121,7 @@ Let's rewrite previous example:
 ```clojure
 (defn perform-update [id updates]
   (flet [entity (find-entity id)
-           updated-entity (update-entity entity updates)]
+         updated-entity (update-entity entity updates)]
     (format-response updated-entity)))
 
 (defn persist-changes [id updates]
