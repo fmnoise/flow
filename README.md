@@ -16,27 +16,63 @@ Consider trivial example:
 Not too readable. Let's add some flow to it:
 
 ```clojure
-(require '[flow.core as f])
+(use '[flow.core])
 
-(->> (f/call (dangerous-action))
-     (f/then next-dangerous-action)
-     (f/else dangerous-fallback-action)
-     (f/either default-value))
+(->> (call (dangerous-action))
+     (then next-dangerous-action)
+     (else dangerous-fallback-action)
+     (either default-value))
 ```
-`call` is starting point to flow, it's a macro which wraps given code to try/catch block and returns either caught exception instance or block evaluation result, each next flow function works with exception instance as a value, so instead of throwing it, it just returns it.
+`call` is starting point to flow, it's a macro which wraps given code to try/catch block and returns either caught exception instance or block evaluation result, each next flow function works with exception instance as a value, so instead of throwing it, it just returns it:
+```clojure
+(call (/ 1 0))
+ => #error {
+     :cause "Divide by zero"
+     :via
+     [{:type java.lang.ArithmeticException
+       :message "Divide by zero"
+       :at [clojure.lang.Numbers divide "Numbers.java" 158]}]
+     :trace ...}
 
-`then` applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception.
+(call (/ 0 1)) ;; => 0
+```
 
-`else` works as opposite, simply returning non-exception values and applying given function to value in case of exception.
+**IMPORTANT** `call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed globally by altering `*exception-base-class`:
+```clojure
+(alter-var-root #'*exception-base-class* (constantly java.lang.Exception))
+```
+or locally using `catching` macro:
+```clojure
+(catching java.lang.Exception (call (/ 1 0)))
+```
 
-`either` works similar to else, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument.
+`then` applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception:
+```clojure
+(->> (call (/ 1 0)) (then inc)) => #error {:cause "Divide by zero" :via ...}
+(->> (call (/ 0 1)) (then inc)) => 1
+```
+
+`else` works as opposite, simply returning non-exception values and applying given function to value in case of exception:
+```clojure
+(->> (call (/ 1 0)) (else (comp :cause Throwable->map))) => "Divide by zero"
+(->> (call (/ 0 1)) (else (comp :cause Throwable->map))) => 0
+```
+
+`either` works similar to else, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument, so `(either default x)` is just a sugar for `(else (constantly default) x)`
+```clojure
+(->> (call (/ 1 0)) (either 2)) ;; => 2
+(->> (call (/ 0 1)) (either 2)) ;; => 0
+```
 
 Another useful functions are `raise` and `thru`:
 
-`raise` accepts 1 agrument and in case of exception given, throws it, otherwise simply returns given argument.
+`raise` accepts 1 agrument and in case of exception given, throws it, otherwise simply returns given argument:
+```clojure
+(->> (call (/ 1 0) raise)) ;; throws ArithmeticException
+(->> (call (/ 0 1) raise)) ;; => 1
+```
 
-`thru` accepts value and function, and applies function to value if value is an exception. Difference with `else` is that `thru` always returns given value, so function is called only for side-effects(like error logging).
-
+`thru` accepts value and function, and applies function to value if value is an exception and return given value, so `(thru println x)` can be written as `(else #(doto % println) x)`, so function is called only for side-effects(like error logging).
 
 As all described functions accept value as last agrument, they are ideal for `->>` macro or `partial` usage. But there are also variations for `->`: `then>`, `else>`, `either>` and `thru>`.
 
@@ -63,11 +99,11 @@ Another "real-life" example:
 
 ;; pipeline
 (defn persist-changes [id updates]
-  (->> (f/call (find-entity id))
-       (f/then #(update-entity % updates))
-       (f/then format-response)
-       (f/thru notify-slack)
-       (f/else (comp format-error Throwable->map))))
+  (->> (call (find-entity id))
+       (then #(update-entity % updates))
+       (then format-response)
+       (thru notify-slack)
+       (else (comp format-error Throwable->map))))
 
 (persist-changes 123 {:department "IT"})
 ;; => {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
@@ -83,17 +119,16 @@ Let's rewrite previous example:
 
 ```clojure
 (defn perform-update [id updates]
-  (f/flet [entity (find-entity id)
+  (flet [entity (find-entity id)
            updated-entity (update-entity entity updates)]
     (format-response updated-entity)))
 
 (defn persist-changes [id updates]
   (->> (perform-update id updates)
-       (f/thru notify-slack)
-       (f/else (comp format-error Throwable->map))))
+       (thru notify-slack)
+       (else (comp format-error Throwable->map))))
 ```
-
-That's it! More info in docstrings.
+That's it!
 
 
 ## License
