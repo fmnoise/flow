@@ -16,7 +16,7 @@ Consider trivial example:
 Not too readable. Let's add some flow to it:
 
 ```clojure
-(use '[flow.core])
+(requre '[flow.core :refer :all])
 
 (->> (call (dangerous-action))
      (then next-dangerous-action)
@@ -129,7 +129,7 @@ Let's rewrite previous example:
        (thru notify-slack)
        (else (comp format-error Throwable->map))))
 ```
-That's it!
+That's it! More info in docscrings.
 
 
 ## License
