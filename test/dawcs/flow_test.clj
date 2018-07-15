@@ -43,24 +43,28 @@
   (testing "else with non-exception argument"
     (is (= (else (constantly "caught") 42) 42)))
 
-  (testing "else with exception argument without class specification"
+  (testing "else with exception argument"
     (is (= (else (constantly "caught")
                  (Exception. "Oops"))
+           "caught"))))
+
+(deftest else-if--test
+  (testing "else-if with non-exception argument"
+    (is (= (else-if NullPointerException (constantly "caught") 42) 42)))
+
+  (testing "else-if with exception argument and class specification equal to exception class"
+    (is (= (else-if NullPointerException
+                    (constantly "caught")
+                    (NullPointerException. "Oops"))
            "caught")))
 
-  (testing "else with exception argument and class specification equal to exception class"
-    (is (= (else NullPointerException
-                 (constantly "caught")
-                 (NullPointerException. "Oops"))
-           "caught")))
-
-  (testing "else with exception argument and class specification non-equal to exception class"
+  (testing "else-if with exception argument and class specification non-equal to exception class"
     (let [err (UnsupportedOperationException. "Oops")]
-      (is (= err (else NullPointerException
-                       (constantly "caught")
-                       err)))))
+      (is (= err (else-if NullPointerException
+                          (constantly "caught")
+                          err)))))
 
-  (testing "else with exeption argument of non-exeption class"
+  (testing "else-if with wrong exeption argument"
     (is (thrown? IllegalArgumentException
                  (else String
                        (constantly "caught")
@@ -70,21 +74,31 @@
   (testing "else> with non-exception argument"
     (is (= (else> 42 (constantly "caught")))))
 
-  (testing "else> with exception argument without class specification"
+  (testing "else> with exception argument"
     (is (= (else> (Exception. "Oops")
                   (constantly "caught"))
+           "caught"))))
+
+(deftest else-if>--test
+  (testing "else-if> with non-exception argument"
+    (is (= (else-if> 42 NullPointerException (constantly "caught")))))
+
+  (testing "else-if> with exception argument and class specification equal to exception class"
+    (is (= (else-if> (NullPointerException. "Oops")
+                     NullPointerException
+                     (constantly "caught"))
            "caught")))
 
-  (testing "else> with exception argument and class specification equal to exception class"
-    (is (= (else> (NullPointerException. "Oops")
-                  NullPointerException
-                  (constantly "caught"))
-           "caught")))
-
-  (testing "else> with exception argument and class specification non-equal to exception class"
+  (testing "else-if> with exception argument and class specification non-equal to exception class"
     (let [err (UnsupportedOperationException. "Oops")]
-      (is (= (else> err NullPointerException (constantly "caught")))
-          err))))
+      (is (= (else-if> err NullPointerException (constantly "caught")))
+          err)))
+
+  (testing "else-if> with wrong exeption argument"
+    (is (thrown? IllegalArgumentException
+                 (else-if> (UnsupportedOperationException. "Oops")
+                           String
+                           (constantly "caught"))))))
 
 (deftest thru--test
   (testing "thru with non-exception argument"
@@ -94,35 +108,43 @@
       (is (= res 42))
       (is (nil? @last-err))))
 
-  (testing "thru with exception argument without class specification"
+  (testing "thru with exception argument"
     (let [last-err (atom nil)
           err (Exception. "Oops")
           side-fx #(reset! last-err %)
           res (thru side-fx err)]
       (is (= res err))
-      (is (= @last-err err))))
+      (is (= @last-err err)))))
 
-  (testing "thru with exception argument with class specification equal to exception class"
+(deftest thru-if--test
+  (testing "thru-if with non-exception argument"
+    (let [last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru-if NullPointerException side-fx 42)]
+      (is (= res 42))
+      (is (nil? @last-err))))
+
+  (testing "thru-if with exception argument with class specification equal to exception class"
     (let [err (NullPointerException. "Oops")
           last-err (atom nil)
           side-fx #(reset! last-err %)
-          res (thru NullPointerException side-fx err)]
+          res (thru-if NullPointerException side-fx err)]
       (is (= res err))
       (is (= @last-err err))))
 
-  (testing "thru with exception argument with class specification non-equal to exception class"
+  (testing "thru-if with exception argument with class specification non-equal to exception class"
     (let [err (UnsupportedOperationException. "Oops")
           last-err (atom nil)
           side-fx #(reset! last-err %)
-          res (thru NullPointerException side-fx err)]
+          res (thru-if NullPointerException side-fx err)]
       (is (= res err))
       (is (= @last-err nil))))
 
-  (testing "thru with exception argument of non-exception class"
+  (testing "thru-if with wrong exception class argument"
     (is (thrown? IllegalArgumentException
-                 (thru String
-                       (constantly "caught")
-                       (UnsupportedOperationException. "Oops"))))))
+                 (thru-if String
+                          (constantly "caught")
+                          (UnsupportedOperationException. "Oops"))))))
 
 (deftest thru>--test
   (testing "thru> with non-exception argument"
@@ -132,29 +154,43 @@
       (is (= res 42))
       (is (nil? @last-err))))
 
-  (testing "thru> with exception argument without class specification"
+  (testing "thru> with exception argument"
     (let [last-err (atom nil)
           err (Exception. "Oops")
           side-fx #(reset! last-err %)
           res (thru> err side-fx)]
       (is (= res err))
-      (is (= @last-err err))))
+      (is (= @last-err err)))))
 
-  (testing "thru> with exception argument with class specification equal to exception class"
+(deftest thru-if>--test
+  (testing "thru-if> with non-exception argument"
+    (let [last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru-if> 42 NullPointerException side-fx)]
+      (is (= res 42))
+      (is (nil? @last-err))))
+
+  (testing "thru-if> with exception argument with class specification equal to exception class"
     (let [err (NullPointerException. "Oops")
           last-err (atom nil)
           side-fx #(reset! last-err %)
-          res (thru> err NullPointerException side-fx)]
+          res (thru-if> err NullPointerException side-fx)]
       (is (= res err))
       (is (= @last-err err))))
 
-  (testing "thru> with exception argument with class specification non-equal to exception class"
+  (testing "thru-if> with exception argument with class specification non-equal to exception class"
     (let [err (UnsupportedOperationException. "Oops")
           last-err (atom nil)
           side-fx #(reset! last-err %)
-          res (thru> err NullPointerException side-fx)]
+          res (thru-if> err NullPointerException side-fx)]
       (is (= res err))
-      (is (= @last-err nil)))))
+      (is (= @last-err nil))))
+
+  (testing "thru-if> with wrong exception class argument"
+    (is (thrown? IllegalArgumentException
+                 (thru-if> (UnsupportedOperationException. "Oops")
+                           String
+                           (constantly "caught"))))))
 
 (deftest either--test
   (testing "either with non-exception argument"

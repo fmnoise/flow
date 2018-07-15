@@ -4,6 +4,10 @@
   "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"
   java.lang.Throwable)
 
+(defn- ex-class-arg-check [ex-class]
+  (when-not (isa? ex-class *exception-base-class*)
+    (throw (IllegalArgumentException. (str "ex-class argument should be a subclass of " *exception-base-class* " but got " ex-class " instead")))))
+
 (defn fail?
   "Checks if value is Throwable"
   [value]
@@ -39,40 +43,43 @@
      ~@body))
 
 (defn raise
-  "If value is an exception, throws it, otherwise returns value"
+  "If value is a `fail?`, throws it, otherwise returns value"
   [value]
   (if (fail? value) (throw value) value))
 
 (defn then
-  "If value is not an exception, applies f to it wrapped in `call`, otherwise returns value"
+  "If value is not a `fail?`, applies f to it wrapped in `call`, otherwise returns value"
   [handler value]
   (if (fail? value) value (call (handler value))))
 
 (defn else
-  "If value is an exception of ex-class(optional), applies handler to it wrapped in `call`, otherwise returns value"
-  ([handler value]
-   (if (fail? value) (call (handler value)) value))
-  ([ex-class handler value]
-   (if-not (isa? ex-class java.lang.Throwable)
-     (throw (java.lang.IllegalArgumentException. "ex-class argument should be a proper Exception class"))
-     (if (isa? (class value) ex-class) (call (handler value)) value))))
+  "If value is a `fail?` of ex-class(optional), applies handler to it wrapped in `call`, otherwise returns value"
+  [handler value]
+  (if (fail? value) (call (handler value)) value))
+
+(defn thru
+  "If value is an `fail?`, calls handler on it (for side effects). Returns value"
+  [handler value]
+  (when (fail? value) (handler value))
+  value)
 
 (defn either
-  "If value is an exception, returns default, otherwise returns value"
+  "If value is a `fail?`, returns default, otherwise returns value"
   [default value]
   (if (fail? value) default value))
 
-(defn thru
-  "If value is an exception of ex-class(optional), calls handler on it (for side effects). Returns value"
-  ([handler value]
-   (when (fail? value) (handler value))
-   value)
-  ([ex-class handler value]
-   (if-not (isa? ex-class java.lang.Throwable)
-     (throw (java.lang.IllegalArgumentException. "ex-class argument should be a proper Exception class"))
-     (do
-       (when (isa? (class value) ex-class) (handler value))
-       value))))
+(defn else-if
+  "If value is an exception of ex-class, applies handler to it wrapped in `call`, otherwise returns value"
+  [ex-class handler value]
+  (ex-class-arg-check ex-class)
+  (if (isa? (class value) ex-class) (call (handler value)) value))
+
+(defn thru-if
+  "If value is an exception of ex-class, calls handler on it (for side effects). Returns value"
+  [ex-class handler value]
+  (ex-class-arg-check ex-class)
+  (when (isa? (class value) ex-class) (handler value))
+  value)
 
 (defn then>
   "Value-first version of `then`"
@@ -86,17 +93,25 @@
   ([value ex-class handler]
    (else ex-class handler value)))
 
+(defn thru>
+  "Value-first version of `thru`"
+  [value handler]
+  (thru handler value))
+
 (defn either>
   "Value-first version of `either`"
   [value default]
   (either default value))
 
-(defn thru>
-  "Value-first version of `thru`"
-  ([value handler]
-   (thru handler value))
-  ([value ex-class handler]
-   (thru ex-class handler value)))
+(defn else-if>
+  "Value-first version of `else-if`"
+  [value ex-class handler]
+  (else-if ex-class handler value))
+
+(defn thru-if>
+  "Value-first version of `thru-if`"
+  [value ex-class handler]
+  (thru-if ex-class handler value))
 
 (defmacro flet*
   [bindings & body]
