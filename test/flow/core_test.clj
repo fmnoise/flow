@@ -2,164 +2,201 @@
   (:require [clojure.test :refer :all]
             [flow.core :refer :all]))
 
-(deftest err?-test
+(deftest err?--test
   (testing "err? with non-exception argument"
-    (false? (err? 42)))
+    (is (not (err? 42))))
 
   (testing "err? with exception argument"
-    (true? (err? (Exception. "Oops")))))
+    (is (err? (Exception. "Oops")))))
 
-(deftest call-test
+(deftest call--test
   (testing "call without exception"
-    (= (call (+ 1 41)) 42))
+    (is (= (call (+ 1 41)) 42)))
 
   (testing "call with exception should return an instance of exception"
-    (isa? (call (class (throw (Exception. "Oops")))) java.lang.Throwable)))
+    (is (err? (call (throw (Exception. "Oops")))))))
 
-(deftest raise-test
+(deftest raise--test
   (testing "raise with non-exception argument"
-    (= (raise 42) 42))
+    (is (= (raise 42) 42)))
 
   (testing "raise with exception argument should throw an exception"
-    (is (thrown? java.lang.Throwable (raise (Exception. "Oops"))))))
+    (is (thrown? Exception (raise (Exception. "Oops"))))))
 
-(deftest then-test
+(deftest then--test
   (testing "then with non-exception argument"
-    (= (then identity 42) 42))
+    (is (= (then inc 42) 43)))
 
   (testing "then with exception argument"
-    (= (then (constantly "Exception handler")
-             (Exception. "Oops"))
-       "Exception handler")))
+    (let [err (Exception. "Oops")]
+      (is (= (then (constantly "ok") err) err)))))
 
-(deftest then>-test
+(deftest then>--test
   (testing "then> with non-exception argument"
-    (= (then 42 identity) 42))
+    (is (= (then> 42 inc) 43)))
 
   (testing "then> with exception argument"
-    (= (then (Exception. "Oops")
-             (constantly "Exception handler"))
-       "Exception handler")))
+    (let [err (Exception. "Oops")]
+      (is (= (then> err (constantly "ok")) err)))))
 
-(deftest else-test
+(deftest else--test
   (testing "else with non-exception argument"
-    (= (else (constantly "Exception handler") 42) 42))
+    (is (= (else (constantly "caught") 42) 42)))
 
   (testing "else with exception argument without class specification"
-    (= (else (constantly "Exception handler")
-             (Exception. "Oops"))
-       "Exception handler"))
+    (is (= (else (constantly "caught")
+                 (Exception. "Oops"))
+           "caught")))
 
   (testing "else with exception argument and class specification equal to exception class"
-    (= (else java.lang.NullPointerException
-             (constantly "Exception handler")
-             (java.lang.NullPointerException. "Oops"))
-       "Exception handler"))
+    (is (= (else NullPointerException
+                 (constantly "caught")
+                 (NullPointerException. "Oops"))
+           "caught")))
 
   (testing "else with exception argument and class specification non-equal to exception class"
-    (isa? (class (else java.lang.NullPointerException
-                       (constantly "Exception handler")
-                       (java.lang.UnsupportedOperationException. "Oops")))
-          java.lang.UnsupportedOperationException))
+    (let [err (UnsupportedOperationException. "Oops")]
+      (is (= err (else NullPointerException
+                       (constantly "caught")
+                       err)))))
 
   (testing "else with exeption argument of non-exeption class"
-    (is (thrown? java.lang.IllegalArgumentException
-                 (else java.lang.String
-                       (constantly "Exception handler")
-                       (java.lang.UnsupportedOperationException. "Oops"))))))
+    (is (thrown? IllegalArgumentException
+                 (else String
+                       (constantly "caught")
+                       (UnsupportedOperationException. "Oops"))))))
 
-(deftest else>-test
+(deftest else>--test
   (testing "else> with non-exception argument"
-    (= (else> 42 (constantly "Exception handler"))))
+    (is (= (else> 42 (constantly "caught")))))
 
   (testing "else> with exception argument without class specification"
-    (= (else> (Exception. "Oops")
-              (constantly "Exception handler"))
-       "Exception handler"))
+    (is (= (else> (Exception. "Oops")
+                  (constantly "caught"))
+           "caught")))
 
   (testing "else> with exception argument and class specification equal to exception class"
-    (= (else> (java.lang.NullPointerException. "Oops")
-              java.lang.NullPointerException
-              (constantly "Exception handler"))
-       "Exception handler"))
+    (is (= (else> (NullPointerException. "Oops")
+                  NullPointerException
+                  (constantly "caught"))
+           "caught")))
 
   (testing "else> with exception argument and class specification non-equal to exception class"
-    (isa? (class (else> (java.lang.UnsupportedOperationException. "Oops")
-                        java.lang.NullPointerException
-                        (constantly "Exception handler")))
-          java.lang.UnsupportedOperationException)))
+    (let [err (UnsupportedOperationException. "Oops")]
+      (is (= (else> err NullPointerException (constantly "caught")))
+          err))))
 
-(deftest thru-test
+(deftest thru--test
   (testing "thru with non-exception argument"
-    (= (thru identity 42) 42))
+    (let [last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru side-fx 42)]
+      (is (= res 42))
+      (is (nil? @last-err))))
 
   (testing "thru with exception argument without class specification"
-    (= (thru (constantly "Exception handler")
-             (Exception. "Oops"))
-       "Exception handler"))
+    (let [last-err (atom nil)
+          err (Exception. "Oops")
+          side-fx #(reset! last-err %)
+          res (thru side-fx err)]
+      (is (= res err))
+      (is (= @last-err err))))
 
   (testing "thru with exception argument with class specification equal to exception class"
-    (= (thru java.lang.NullPointerException
-             (constantly "Exception handler")
-             (java.lang.NullPointerException. "Oops"))
-       "Exception handler"))
+    (let [err (NullPointerException. "Oops")
+          last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru NullPointerException side-fx err)]
+      (is (= res err))
+      (is (= @last-err err))))
 
   (testing "thru with exception argument with class specification non-equal to exception class"
-    (isa? (class (thru java.lang.NullPointerException
-                       (constantly "Exception handler")
-                       (java.lang.UnsupportedOperationException. "Oops")))
-          java.lang.UnsupportedOperationException))
+    (let [err (UnsupportedOperationException. "Oops")
+          last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru NullPointerException side-fx err)]
+      (is (= res err))
+      (is (= @last-err nil))))
 
   (testing "thru with exception argument of non-exception class"
-    (is (thrown? java.lang.IllegalArgumentException
-                 (thru java.lang.String
-                       (constantly "Exception handler")
-                       (java.lang.UnsupportedOperationException. "Oops"))))))
+    (is (thrown? IllegalArgumentException
+                 (thru String
+                       (constantly "caught")
+                       (UnsupportedOperationException. "Oops"))))))
 
-(deftest thru>-test
+(deftest thru>--test
   (testing "thru> with non-exception argument"
-    (= (thru> 42 identity) 42))
+    (let [last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru> 42 side-fx)]
+      (is (= res 42))
+      (is (nil? @last-err))))
 
   (testing "thru> with exception argument without class specification"
-    (= (thru> (Exception. "Oops")
-             (constantly "Exception handler"))
-       "Exception handler"))
+    (let [last-err (atom nil)
+          err (Exception. "Oops")
+          side-fx #(reset! last-err %)
+          res (thru> err side-fx)]
+      (is (= res err))
+      (is (= @last-err err))))
 
-  (testing "thru with exception argument with class specification equal to exception class"
-    (= (thru> (java.lang.NullPointerException. "Oops")
-              java.lang.NullPointerException
-              (constantly "Exception handler"))
-       "Exception handler"))
+  (testing "thru> with exception argument with class specification equal to exception class"
+    (let [err (NullPointerException. "Oops")
+          last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru> err NullPointerException side-fx)]
+      (is (= res err))
+      (is (= @last-err err))))
 
-  (testing "thru with exception argument with class specification non-equal to exception class"
-    (isa? (class (thru> (java.lang.UnsupportedOperationException. "Oops")
-                        java.lang.NullPointerException
-                        (constantly "Exception handler")))
-          java.lang.UnsupportedOperationException)))
+  (testing "thru> with exception argument with class specification non-equal to exception class"
+    (let [err (UnsupportedOperationException. "Oops")
+          last-err (atom nil)
+          side-fx #(reset! last-err %)
+          res (thru> err NullPointerException side-fx)]
+      (is (= res err))
+      (is (= @last-err nil)))))
 
-(deftest either-test
+(deftest either--test
   (testing "either with non-exception argument"
-    (= (either "Exception" 42) 42))
+    (is (= (either "default" 42) 42)))
 
   (testing "either with exception argument"
-    (= (either "Exception" (Exception. "Oops")) "Exception")))
+    (is (= (either "default" (Exception. "Oops")) "default"))))
 
-(deftest either>-test
+(deftest either>--test
   (testing "either> with non-exception argument"
-    (= (either> 42 "Exception") 42))
+    (is (= (either> 42 "default") 42)))
 
   (testing "either> with exception argument"
-    (= (either> (Exception. "Oops") "Exception") "Exception")))
+    (is (= (either> (Exception. "Oops") "default") "default"))))
 
-(deftest flet-test
+(deftest flet--test
   (testing "flet with no exception"
-   (= (flet [x (+ 1 2)
-             y (+ x 39)]
-            y)
-      42))
+    (is (= (flet [x (+ 1 2)
+                  y (+ x 39)]
+                 y)
+           42)))
 
-  (testing "flet with exception"
-    (isa? (class (flet [x (+ 1 2)
-                        y (/ x 0)]
-                       y))
-          java.lang.Throwable)))
+  (testing "flet with exception in bindings"
+    (is (err? (flet [x (+ 1 2)
+                     y (/ x 0)]
+                    y))))
+
+  (testing "flet with exception in body"
+    (is (err? (flet [x (+ 1 2)
+                     y 0]
+                    (/ x y))))))
+
+(deftest base-exception-class--test
+  (testing "call with changed *base-exception-class*"
+    (catching Exception
+      (is (thrown? Throwable (call (throw (Throwable. "Oops")))))))
+
+  (testing "then with changed *base-exception-class*"
+    (catching Exception
+      (is (thrown? Throwable (then (constantly (throw (Throwable. "Oops")))
+                                   1)))))
+  (testing "else with changed *base-exception-class*"
+    (catching Exception
+      (is (thrown? Throwable (else (constantly (throw (Throwable. "Oops")))
+                                   (fail "Oops")))))))
