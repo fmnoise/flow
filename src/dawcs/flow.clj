@@ -52,11 +52,21 @@
   (if (fail? value) (throw value) value))
 
 (defn then
+  "If value is not a `fail?`, applies f to it, otherwise returns value"
+  [handler value]
+  (if (fail? value) value (handler value)))
+
+(defn then-call
   "If value is not a `fail?`, applies f to it wrapped in `call`, otherwise returns value"
   [handler value]
   (if (fail? value) value (call (handler value))))
 
 (defn else
+  "If value is a `fail?`, applies handler to it, otherwise returns value"
+  [handler value]
+  (if (fail? value) (handler value) value))
+
+(defn else-call
   "If value is a `fail?`, applies handler to it wrapped in `call`, otherwise returns value"
   [handler value]
   (if (fail? value) (call (handler value)) value))
@@ -73,6 +83,12 @@
   (if (fail? value) default value))
 
 (defn else-if
+  "If value is an exception of ex-class, applies handler to it, otherwise returns value"
+  [ex-class handler value]
+  (ex-class-arg-check ex-class)
+  (if (isa? (class value) ex-class) (handler value) value))
+
+(defn else-call-if
   "If value is an exception of ex-class, applies handler to it wrapped in `call`, otherwise returns value"
   [ex-class handler value]
   (ex-class-arg-check ex-class)
@@ -90,10 +106,20 @@
   [value handler]
   (then handler value))
 
+(defn then-call>
+  "Value-first version of `then-call`"
+  [value handler]
+  (then-call handler value))
+
 (defn else>
   "Value-first version of `else`"
   [value handler]
   (else handler value))
+
+(defn else-call>
+  "Value-first version of `else-call`"
+  [value handler]
+  (else-call handler value))
 
 (defn thru>
   "Value-first version of `thru`"
@@ -110,6 +136,11 @@
   [value ex-class handler]
   (else-if ex-class handler value))
 
+(defn else-call-if>
+  "Value-first version of `else-call-if`"
+  [value ex-class handler]
+  (else-call-if ex-class handler value))
+
 (defn thru-if>
   "Value-first version of `thru-if`"
   [value ex-class handler]
@@ -121,7 +152,7 @@
     `(let [result# ~(call expression)]
        (->> result#
             (then (fn [~bind-name]
-                    (flet* ~(rest bindings) ~@body)))))
+                    (call (flet* ~(rest bindings) ~@body))))))
     `(do ~@body)))
 
 (defmacro flet
