@@ -57,7 +57,7 @@
   (if (fail? value) value (call (handler value))))
 
 (defn else
-  "If value is a `fail?` of ex-class(optional), applies handler to it wrapped in `call`, otherwise returns value"
+  "If value is a `fail?`, applies handler to it wrapped in `call`, otherwise returns value"
   [handler value]
   (if (fail? value) (call (handler value)) value))
 
