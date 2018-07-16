@@ -92,10 +92,8 @@
 
 (defn else>
   "Value-first version of `else`"
-  ([value handler]
-   (else handler value))
-  ([value ex-class handler]
-   (else ex-class handler value)))
+  [value handler]
+  (else handler value))
 
 (defn thru>
   "Value-first version of `thru`"
