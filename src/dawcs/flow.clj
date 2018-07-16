@@ -26,15 +26,19 @@
   ([msg data cause] (throw (ex-info msg data cause))))
 
 (defmacro call
-  "Executes body in `try` block. When caught an exception
+  "Executes body in `try/catch/finally` block. When caught an exception
   which class is `*exception-base-class*`(defaults to `Throwable`) or a subclass of it,
-  returns it, otherwise `throw`s it. Returns value of body if no exception has caught"
+  returns it, otherwise `throw`s it. Returns value of body if no exception has caught.
+  `finally` block is optional and can be supplied by preceeding with :finally keyword, example:
+  (call (/ 1 0) :finally (println :done))"
   [& body]
-  `(try ~@body
-     (catch java.lang.Throwable t#
-       (if (isa? (class t#) *exception-base-class*)
-         t#
-         (throw t#)))))
+  (let [[try-body [_ & finally-body]] (split-with (complement #{:finally}) body)]
+    `(try ~@try-body
+          (catch java.lang.Throwable t#
+            (if (isa? (class t#) *exception-base-class*)
+              t#
+              (throw t#)))
+          (finally ~@finally-body))))
 
 (defmacro catching
   "Executes body with `*exception-base-class*` bound to given class"
