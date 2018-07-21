@@ -46,7 +46,7 @@
 (defmacro ignoring
   "Executes body with `*ignored-exceptions*` bound to given value"
   [ignored-exceptions & body]
-  `(binding [*ignoreed-exceptions* ~ignored-exceptions]
+  `(binding [*ignored-exceptions* ~ignored-exceptions]
      ~@body))
 
 ;; construction
