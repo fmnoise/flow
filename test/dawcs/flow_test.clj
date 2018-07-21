@@ -339,9 +339,12 @@
                  (/ x y))))))
 
 (deftest base-exception-class--test
-  (catching Exception
-    (is (thrown? Throwable (call #(throw (Throwable. "oops")))))
-    (is (fail? (call #(throw (Exception. "oops")))))))
+  (let [f (fn [& _] (throw (Throwable. "oops")))]
+    (catching Exception
+      (is (thrown? Throwable (call f)))
+      (is (thrown? Throwable (then f 1)))
+      (is (thrown? Throwable (else f (fail "oops"))))
+      (is (fail? (call #(throw (Exception. "oops"))))))))
 
 (deftest ignored-exceptions--test
   (testing "call with changed *base-exception-class*"
