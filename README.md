@@ -134,26 +134,27 @@ Let's rewrite previous example:
 
 ### Tuning exceptions
 
-`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed globally:
+`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
 ```clojure
 (alter-var-root #'*exception-base-class* (constantly java.lang.Exception))
-;; there's also a helper for that
+
+;; or using a helper
 (catch-from! java.lang.Exception)
-```
-or locally using `catching` macro:
-```clojure
+
+;; or define for a block of code
 (catching java.lang.Exception (call / 1 0))
 ```
-Some exceptions (like `clojure.lang.ArityException`) may signal about bad code or typo and throwing them may help to find it as early as possible, so it may be added to ignored exceptions list:
+Some exceptions (like `clojure.lang.ArityException`) may signal about bad code or typo and throwing them may help to find it as early as possible, so it may be added to ignored exceptions list, so all pipeline functions will not catch these exceptions and it will throw:
 ```clojure
 (alter-var-root #'*ignored-exceptions* (constantly #{IllegalArgumentException ClassCastException}))
+
 ;; there's also a helper for that
 (ignore-exceptions! #{IllegalArgumentException ClassCastException})
+
 ;; add without overwriting previous values
 (add-ignored-exceptions! #{NullPointerException})
-```
-or defined for a block of code with `ignoring` macro:
-```clojure
+
+;; or define for a block of code
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
 
