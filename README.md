@@ -25,7 +25,9 @@ Not too readable. Let's add some flow to it:
      (either default-value))
 ```
 
-Flow follows core Clojure idea of "everything is data" and provides exception toolset based on idea of errors as data. **call** is starting point to flow, it accepts a function and its arguments, wraps function call to try/catch block and returns either caught exception instance or call result:
+Flow follows core Clojure idea of "everything is data" and provides exception toolset based on idea of errors as data.
+
+**call** is starting point to flow, it accepts a function and its arguments, wraps function call to try/catch block and returns either caught exception instance or call result:
 ```clojure
 (call / 1 0)
  => #error {
@@ -53,13 +55,15 @@ Each next flow function works with exception instance as a value, so instead of 
 (->> (call / 0 1) (else (comp :cause Throwable->map))) => 0
 ```
 
-**either** works similar to `else`, but accepts another value (default) and returns it in case of exception given as first agrument, otherwise it returns first agrument, so `(either default x)` is just a sugar for `(else (constantly default) x)`
+**IMPORTANT** Both `else` and `then` uses `call` under the hood, so if something will fail in handler, this error will be caught and passed through rest of pipeline.
+
+**either** works similar to `else`, but accepts another value (default) and returns it in case of exception given in first agrument, otherwise returns first agrument:
 ```clojure
 (->> (call / 1 0) (either 2)) ;; => 2
 (->> (call / 0 1) (either 2)) ;; => 0
 ```
 
-Other useful functions are `raise` and `thru`:
+2 special functions are `raise` and `thru`:
 
 **raise** accepts 1 agrument and in case of exception given, throws it, otherwise simply returns given argument:
 ```clojure
@@ -67,7 +71,7 @@ Other useful functions are `raise` and `thru`:
 (->> (call / 0 1) raise)) ;; => 1
 ```
 
-**thru** accepts value and function, and applies function to value if value is an exception and return given value, so `(thru println x)` can be written as `(else #(doto % println) x)`, so function is called only for side-effects(like error logging).
+**thru** accepts value and function, and applies function to value if value is an exception and return given value. Keep in mind that function is called only for side-effects(like error logging).
 
 **IMPORTANT** `thru` doesn't wrap handler to try/catch by default, so you should do that manually if you need that
 
@@ -130,7 +134,7 @@ Let's rewrite previous example:
 
 ### Tuning exceptions
 
-`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed globally by altering `*exception-base-class`:
+`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed globally:
 ```clojure
 (alter-var-root #'*exception-base-class* (constantly java.lang.Exception))
 ;; there's also a helper for that
@@ -148,7 +152,7 @@ if you don't need to catch some exceptions which may point to bad code(like `clo
 ;; add without overwriting previous values
 (add-ignored-exceptions! #{NullPointerException})
 ```
-or defined for a block of code:
+or defined for a block of code with `ignoring` macro:
 ```clojure
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
