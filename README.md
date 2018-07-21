@@ -144,7 +144,7 @@ or locally using `catching` macro:
 ```clojure
 (catching java.lang.Exception (call / 1 0))
 ```
-if you don't need to catch some exceptions which may point to bad code(like `clojure.lang.ArityException`) and is better to find it as early as possible, it may be added to ignored exceptions list:
+Some exceptions (like `clojure.lang.ArityException`) may signal about bad code or typo and throwing them may help to find it as early as possible, so it may be added to ignored exceptions list:
 ```clojure
 (alter-var-root #'*ignored-exceptions* (constantly #{IllegalArgumentException ClassCastException}))
 ;; there's also a helper for that
