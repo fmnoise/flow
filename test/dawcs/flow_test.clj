@@ -1,61 +1,115 @@
 (ns dawcs.flow-test
   (:require [clojure.test :refer :all]
-            [dawcs.flow :refer :all]))
+            [dawcs.flow :as f :refer :all]))
 
 (deftest fail?--test
   (testing "with non-exception argument"
     (is (not (fail? 42))))
 
   (testing "with exception argument"
-    (is (fail? (Exception. "Oops")))))
+    (is (fail? (Exception. "oops")))))
+
+(deftest fail--test
+  (testing "with 1 argument"
+    (let [e (-> (fail "oops"))
+          m (Throwable->map e)]
+      (is (= clojure.lang.ExceptionInfo (class e)))
+      (is (= "oops" (:cause m)))
+      (is (= {} (:data m)))))
+
+  (testing "with 2 arguments"
+    (testing "with 2nd map argument"
+      (let [m (-> (fail "oops" {:a 1}) Throwable->map)]
+        (is (= "oops" (:cause m)))
+        (is (= {:a 1} (:data m)))))
+
+    (testing "with 2nd non-map argument"
+      (let [m (-> (fail "oops" 1) Throwable->map)]
+        (is (= "oops" (:cause m)))
+        (is (= {::f/context 1} (:data m)))))))
+
+(deftest fail!--test
+  (is (thrown? clojure.lang.ExceptionInfo (fail! "oops"))))
 
 (deftest call--test
   (testing "without exception"
-    (is (= (call (+ 1 41)) 42)))
+    (is (= (call #(+ 1 41)) 42)))
 
   (testing "with exception"
-    (is (fail? (call (throw (Exception. "Oops")))))))
+    (is (fail? (call #(throw (Exception. "oops")))))))
 
 (deftest raise--test
   (testing "with non-exception argument"
     (is (= (raise 42) 42)))
 
   (testing "with exception argument"
-    (is (thrown? Exception (raise (Exception. "Oops"))))))
+    (is (thrown? clojure.lang.ExceptionInfo (raise (fail "oops"))))))
 
 (deftest then--test
   (testing "with non-exception argument"
     (is (= (then inc 42) 43)))
 
   (testing "with exception argument"
-    (let [err (Exception. "Oops")]
+    (let [err (fail "oops")]
       (is (= (then (constantly "ok") err) err))))
 
   (testing "with exception thrown inside of then handler"
     (testing "and non-exception argument given"
-      (let [err (fail "Oops")]
-        (is (= (then (fn [_] (throw err)) 21) err))))
+      (is (thrown? clojure.lang.ExceptionInfo (then (fn [_] (fail! "oops")) 21))))
 
     (testing "and exception argument given"
-      (let [err (fail "Uh-oh")]
-        (is (= (then (fn [_] (throw (fail "Oops"))) err) err))))))
+      (let [err (fail "uh-oh")]
+        (is (= (then (fn [_] (throw (fail "oops"))) err) err))))))
+
+(deftest then-call--test
+  (testing "with non-exception argument"
+    (is (= (then-call inc 42) 43)))
+
+  (testing "with exception argument"
+    (let [err (fail "oops")]
+      (is (= (then-call (constantly "ok") err) err))))
+
+  (testing "with exception thrown inside of then handler"
+    (testing "and non-exception argument given"
+      (let [err (fail "oops")]
+        (is (= (then-call (fn [_] (throw err)) 21) err))))
+
+    (testing "and exception argument given"
+      (let [err (fail "uh-oh")]
+        (is (= (then-call (fn [_] (throw (fail "oops"))) err) err))))))
 
 (deftest then>--test
   (testing "with non-exception argument"
     (is (= (then> 42 inc) 43)))
 
   (testing "with exception argument"
-    (let [err (Exception. "Oops")]
+    (let [err (fail "oops")]
       (is (= (then> err (constantly "ok")) err))))
 
-  (testing "with exception thrown inside of handler"
+  (testing "with exception thrown inside of then handler"
     (testing "and non-exception argument given"
-      (let [err (fail "Oops")]
-        (is (= (then> 21 (fn [_] (throw err))) err))))
+      (is (thrown? clojure.lang.ExceptionInfo (then> 21 (fn [_] (fail! "oops"))))))
 
     (testing "and exception argument given"
-      (let [err (fail "Uh-oh")]
-        (is (= (then> err (fn [_] (throw (fail "Oops")))) err))))))
+      (let [err (fail "uh-oh")]
+        (is (= (then> err (fn [_] (throw (fail "oops")))) err))))))
+
+(deftest then-call>--test
+  (testing "with non-exception argument"
+    (is (= (then-call> 42 inc) 43)))
+
+  (testing "with exception argument"
+    (let [err (Exception. "oops")]
+      (is (= (then-call> err (constantly "ok") ) err))))
+
+  (testing "with exception thrown inside of then handler"
+    (testing "and non-exception argument given"
+      (let [err (fail "oops")]
+        (is (= (then-call> 21 (fn [_] (throw err))) err))))
+
+    (testing "and exception argument given"
+      (let [err (fail "uh-oh")]
+        (is (= (then-call> err (fn [_] (throw (fail "oops")))) err))))))
 
 (deftest else--test
   (testing "with non-exception argument"
@@ -63,16 +117,32 @@
 
   (testing "with exception argument"
     (is (= (else (constantly "caught")
-                 (Exception. "Oops"))
+                 (fail "oops"))
            "caught")))
 
   (testing "with exception thrown inside of handler"
     (testing "and non-exception argument given"
-      (is (= (else (fn [_] (fail! "Oops")) 21) 21)))
+      (is (= (else (fn [_] (fail! "oops")) 21) 21)))
 
     (testing "and exception argument given"
-      (let [err (fail "Oops")]
-        (is (= (else (fn [_] (throw err)) (fail "Uh-oh")) err))))))
+      (is (thrown? clojure.lang.ExceptionInfo (else #(throw %) (fail "oops")))))))
+
+(deftest else-call--test
+  (testing "with non-exception argument"
+    (is (= (else-call (constantly "caught") 42) 42)))
+
+  (testing "with exception argument"
+    (is (= (else-call (constantly "caught")
+                      (fail "oops"))
+           "caught")))
+
+  (testing "with exception thrown inside of handler"
+    (testing "and non-exception argument given"
+      (is (= (else-call (fn [_] (fail! "oops")) 21) 21)))
+
+    (testing "and exception argument given"
+      (let [err (fail "oops")]
+        (is (= (else-call (fn [_] (throw err)) (fail "uh-oh")) err))))))
 
 (deftest else-if--test
   (testing "with non-exception argument"
@@ -85,11 +155,11 @@
     (testing "and class specification equal to exception class"
       (is (= (else-if NullPointerException
                       (constantly "caught")
-                      (NullPointerException. "Oops"))
+                      (NullPointerException. "oops"))
              "caught")))
 
     (testing "and class specification non-equal to exception class"
-      (let [err (UnsupportedOperationException. "Oops")]
+      (let [err (UnsupportedOperationException. "oops")]
         (is (= (else-if NullPointerException
                         (constantly "caught")
                         err)
@@ -98,48 +168,114 @@
   (testing "with exception thrown inside of handler"
     (testing "and non-exception argument given"
       (is (= (else-if NullPointerException
-                      (fn [_] (fail! "Oops"))
+                      (fn [_] (fail! "oops"))
                       21)
              21)))
 
     (testing "and exception argument given"
       (testing "and class specification equal to exception class"
-        (let [err (fail "Oops")]
-          (is (= (else-if NullPointerException
-                          (fn [_] (throw err))
-                          (NullPointerException. "Oops"))
-                 err))))
+        (is (thrown? clojure.lang.ExceptionInfo
+                     (else-if NullPointerException
+                              (fn [_] (fail! "oops"))
+                              (NullPointerException. "oops")))))
 
       (testing "and class specification non-equal to exception class"
-        (let [err (UnsupportedOperationException. "Oops")]
+        (let [err (UnsupportedOperationException. "oops")]
           (is (= (else-if NullPointerException
-                          (fn [_] (fail "Uh-oh"))
+                          (fn [_] (fail! "uh-oh"))
                           err)
                  err))))))
 
   (testing "with wrong exeption argument"
     (is (thrown? IllegalArgumentException
-                 (else String
-                       (constantly "caught")
-                       (UnsupportedOperationException. "Oops"))))))
+                 (else-if String
+                          (constantly "caught")
+                          (UnsupportedOperationException. "oops"))))))
+
+(deftest else-call-if--test
+  (testing "with non-exception argument"
+    (is (= (else-call-if NullPointerException
+                         (constantly "caught")
+                         42)
+           42)))
+
+  (testing "with exception argument"
+    (testing "and class specification equal to exception class"
+      (is (= (else-call-if NullPointerException
+                           (constantly "caught")
+                           (NullPointerException. "oops"))
+             "caught")))
+
+    (testing "and class specification non-equal to exception class"
+      (let [err (UnsupportedOperationException. "oops")]
+        (is (= (else-call-if NullPointerException
+                             (constantly "caught")
+                             err)
+               err)))))
+
+  (testing "with exception thrown inside of handler"
+    (testing "and non-exception argument given"
+      (is (= (else-call-if NullPointerException
+                           (fn [_] (fail! "oops"))
+                           21)
+             21)))
+
+    (testing "and exception argument given"
+      (testing "and class specification equal to exception class"
+        (let [err (fail "oops")]
+          (is (= (else-call-if NullPointerException
+                               (fn [_] (throw err))
+                               (NullPointerException. "oops"))
+                 err))))
+
+      (testing "and class specification non-equal to exception class"
+        (let [err (UnsupportedOperationException. "oops")]
+          (is (= (else-call-if NullPointerException
+                               (fn [_] (fail "Uh-oh"))
+                               err)
+                 err))))))
+
+  (testing "with wrong exeption argument"
+    (is (thrown? IllegalArgumentException
+                 (else-call-if String
+                               (constantly "caught")
+                               (UnsupportedOperationException. "oops"))))))
 
 (deftest else>--test
   (testing "with non-exception argument"
     (is (= (else> 42 (constantly "caught")) 42)))
 
   (testing "with exception argument"
-    (is (= (else> (Exception. "Oops")
+    (is (= (else> (fail "oops")
                   (constantly "caught"))
            "caught")))
 
   (testing "exception thrown inside of handler"
     (testing "and non-exception argument given"
-      (is (= (else> 21 (fn [_] (fail! "Oops"))) 21)))
+      (is (= (else> 21 (fn [_] (fail! "oops"))) 21)))
 
     (testing "and exception argument given"
-      (let [err (fail "Oops")]
-        (is (= (else> (NullPointerException. "Oops")
-                     (fn [_] (throw err)))
+      (is (thrown? clojure.lang.ExceptionInfo
+                   (else> (fail "oops")
+                          (fn [_] (fail! "oops"))))))))
+
+(deftest else-call>--test
+  (testing "with non-exception argument"
+    (is (= (else-call> 42 (constantly "caught")) 42)))
+
+  (testing "with exception argument"
+    (is (= (else-call> (Exception. "oops")
+                       (constantly "caught"))
+           "caught")))
+
+  (testing "exception thrown inside of handler"
+    (testing "and non-exception argument given"
+      (is (= (else-call> 21 (fn [_] (fail! "oops"))) 21)))
+
+    (testing "and exception argument given"
+      (let [err (fail "oops")]
+        (is (= (else-call> (NullPointerException. "oops")
+                           (fn [_] (throw err)))
                err))))))
 
 (deftest else-if>--test
@@ -151,13 +287,13 @@
 
   (testing "with exception agrument"
     (testing "and class specification equal to exception class"
-      (is (= (else-if> (NullPointerException. "Oops")
+      (is (= (else-if> (NullPointerException. "oops")
                        NullPointerException
                        (constantly "caught"))
              "caught")))
 
     (testing "and class specification non-equal to exception class"
-      (let [err (UnsupportedOperationException. "Oops")]
+      (let [err (UnsupportedOperationException. "oops")]
         (is (= (else-if> err
                          NullPointerException
                          (constantly "caught"))
@@ -167,19 +303,18 @@
     (testing "and non-exception argument given"
       (is (= (else-if> 21
                        NullPointerException
-                       (fn [_] (fail! "Oops")))
+                       (fn [_] (fail! "oops")))
              21)))
 
     (testing "and exception argument given"
       (testing "and class specification equal to exception class"
-        (let [err (fail "Oops")]
-          (is (= (else-if> (NullPointerException. "Oops")
-                           NullPointerException
-                           (fn [_] (throw err)))
-                 err))))
+        (is (thrown? clojure.lang.ExceptionInfo
+                    (else-if> (NullPointerException. "oops")
+                              NullPointerException
+                              (fn [_] (fail! "oops"))))))
 
       (testing "and class specification non-equal to exception class"
-        (let [err (UnsupportedOperationException. "Oops")]
+        (let [err (UnsupportedOperationException. "oops")]
           (is (= (else-if> err
                            NullPointerException
                            (fn [_] (fail "Uh-oh")))
@@ -187,9 +322,58 @@
 
   (testing "with wrong exeption class argument"
     (is (thrown? IllegalArgumentException
-                 (else-if> (UnsupportedOperationException. "Oops")
+                 (else-if> (UnsupportedOperationException. "oops")
                            String
                            (constantly "caught"))))))
+
+(deftest else-call-if>--test
+  (testing "with non-exception argument"
+    (is (= (else-call-if> 42
+                          NullPointerException
+                          (constantly "caught"))
+           42)))
+
+  (testing "with exception agrument"
+    (testing "and class specification equal to exception class"
+      (is (= (else-call-if> (NullPointerException. "oops")
+                            NullPointerException
+                            (constantly "caught"))
+             "caught")))
+
+    (testing "and class specification non-equal to exception class"
+      (let [err (UnsupportedOperationException. "oops")]
+        (is (= (else-call-if> err
+                              NullPointerException
+                              (constantly "caught"))
+               err)))))
+
+  (testing "with exception thrown inside of handler"
+    (testing "and non-exception argument given"
+      (is (= (else-call-if> 21
+                            NullPointerException
+                            (fn [_] (fail! "oops")))
+             21)))
+
+    (testing "and exception argument given"
+      (testing "and class specification equal to exception class"
+        (let [err (fail "oops")]
+          (is (= (else-call-if> (NullPointerException. "oops")
+                                NullPointerException
+                                (fn [_] (throw err)))
+                 err))))
+
+      (testing "and class specification non-equal to exception class"
+        (let [err (UnsupportedOperationException. "oops")]
+          (is (= (else-call-if> err
+                                NullPointerException
+                                (fn [_] (fail "Uh-oh")))
+                 err))))))
+
+  (testing "with wrong exeption class argument"
+    (is (thrown? IllegalArgumentException
+                 (else-call-if> (UnsupportedOperationException. "oops")
+                                String
+                                (constantly "caught"))))))
 
 (deftest thru--test
   (testing "with non-exception argument"
@@ -201,7 +385,7 @@
 
   (testing "with exception argument"
     (let [last-err (atom nil)
-          err (Exception. "Oops")
+          err (Exception. "oops")
           side-fx #(reset! last-err %)
           res (thru side-fx err)]
       (is (= res err))
@@ -217,7 +401,7 @@
 
   (testing "with exception argument"
     (testing "and class specification equal to exception class"
-      (let [err (NullPointerException. "Oops")
+      (let [err (NullPointerException. "oops")
             last-err (atom nil)
             side-fx #(reset! last-err %)
             res (thru-if NullPointerException side-fx err)]
@@ -225,7 +409,7 @@
         (is (= @last-err err))))
 
     (testing "and class specification non-equal to exception class"
-      (let [err (UnsupportedOperationException. "Oops")
+      (let [err (UnsupportedOperationException. "oops")
             last-err (atom nil)
             side-fx #(reset! last-err %)
             res (thru-if NullPointerException side-fx err)]
@@ -236,7 +420,7 @@
     (is (thrown? IllegalArgumentException
                  (thru-if String
                           (constantly "caught")
-                          (UnsupportedOperationException. "Oops"))))))
+                          (UnsupportedOperationException. "oops"))))))
 
 (deftest thru>--test
   (testing "with non-exception argument"
@@ -248,7 +432,7 @@
 
   (testing "with exception argument"
     (let [last-err (atom nil)
-          err (Exception. "Oops")
+          err (Exception. "oops")
           side-fx #(reset! last-err %)
           res (thru> err side-fx)]
       (is (= res err))
@@ -264,7 +448,7 @@
 
   (testing "with exception argument"
     (testing "and class specification equal to exception class"
-      (let [err (NullPointerException. "Oops")
+      (let [err (NullPointerException. "oops")
             last-err (atom nil)
             side-fx #(reset! last-err %)
             res (thru-if> err NullPointerException side-fx)]
@@ -272,7 +456,7 @@
         (is (= @last-err err))))
 
     (testing "and class specification non-equal to exception class"
-      (let [err (UnsupportedOperationException. "Oops")
+      (let [err (UnsupportedOperationException. "oops")
             last-err (atom nil)
             side-fx #(reset! last-err %)
             res (thru-if> err NullPointerException side-fx)]
@@ -281,7 +465,7 @@
 
   (testing "with wrong exception class argument"
     (is (thrown? IllegalArgumentException
-                 (thru-if> (UnsupportedOperationException. "Oops")
+                 (thru-if> (UnsupportedOperationException. "oops")
                            String
                            (constantly "caught"))))))
 
@@ -290,14 +474,14 @@
     (is (= (either "default" 42) 42)))
 
   (testing "with exception argument"
-    (is (= (either "default" (Exception. "Oops")) "default"))))
+    (is (= (either "default" (Exception. "oops")) "default"))))
 
 (deftest either>--test
   (testing "with non-exception argument"
     (is (= (either> 42 "default") 42)))
 
   (testing "with exception argument"
-    (is (= (either> (Exception. "Oops") "default") "default"))))
+    (is (= (either> (Exception. "oops") "default") "default"))))
 
 (deftest flet--test
   (testing "with no exception"
@@ -317,15 +501,12 @@
                  (/ x y))))))
 
 (deftest base-exception-class--test
-  (testing "call with changed *base-exception-class*"
-    (catching Exception
-      (is (thrown? Throwable (call (throw (Throwable. "Oops")))))))
+  (catching Exception
+    (is (thrown? Throwable (call #(throw (Throwable. "oops")))))
+    (is (fail? (call #(throw (Exception. "oops")))))))
 
-  (testing "then with changed *base-exception-class*"
-    (catching Exception
-      (is (thrown? Throwable (then (constantly (throw (Throwable. "Oops")))
-                                   1)))))
-  (testing "else with changed *base-exception-class*"
-    (catching Exception
-      (is (thrown? Throwable (else (constantly (throw (Throwable. "Oops")))
-                                   (fail "Oops")))))))
+(deftest ignored-exceptions--test
+  (testing "call with changed *base-exception-class*"
+    (ignoring #{Exception}
+      (is (thrown? IllegalArgumentException (call #(throw (IllegalArgumentException. "oops")))))
+      (is (fail? (call #(throw (Throwable. "oops"))))))))
