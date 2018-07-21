@@ -24,6 +24,12 @@
 ;; setup
 
 (defn ignore-exceptions!
+  "Sets `*ignored-exceptions*` to given set via `alter-var-root`"
+  [ex-class-set]
+  {:pre [(set? ex-class-set)]}
+  (alter-var-root #'*ignored-exceptions* (constantly ex-class-set)))
+
+(defn add-ignored-exceptions!
   "Adds given set of classes to `*ignored-exceptions*` via `alter-var-root`"
   [ex-class-set]
   {:pre [(set? ex-class-set)]}
@@ -85,14 +91,14 @@
   (if (fail? value) (throw value) value))
 
 (defn then
-  "If value is not a `fail?`, applies f to it, otherwise returns value"
+  "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
   [handler value]
-  (if (fail? value) value (handler value)))
+  (if (fail? value) value (call handler value)))
 
 (defn else
-  "If value is a `fail?`, applies handler to it, otherwise returns value"
+  "If value is a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"
   [handler value]
-  (if (fail? value) (handler value) value))
+  (if (fail? value) (call handler value) value))
 
 (defn thru
   "If value is an `fail?`, calls handler on it (for side effects). Returns value"
@@ -111,7 +117,7 @@
   "If value is an exception of ex-class, applies handler to it, otherwise returns value"
   [ex-class handler value]
   (ex-class-arg-check ex-class)
-  (if (isa? (class value) ex-class) (handler value) value))
+  (if (isa? (class value) ex-class) (call handler value) value))
 
 (defn thru-if
   "If value is an exception of ex-class, calls handler on it (for side effects). Returns value"
@@ -120,24 +126,6 @@
   (when (isa? (class value) ex-class) (handler value))
   value)
 
-;; call-wrappers
-
-(defn then-call
-  "If value is not a `fail?`, applies f to it wrapped in `call`, otherwise returns value"
-  [handler value]
-  (if (fail? value) value (call handler value)))
-
-(defn else-call
-  "If value is a `fail?`, applies handler to it wrapped in `call`, otherwise returns value"
-  [handler value]
-  (if (fail? value) (call handler value) value))
-
-(defn else-call-if
-  "If value is an exception of ex-class, applies handler to it wrapped in `call`, otherwise returns value"
-  [ex-class handler value]
-  (ex-class-arg-check ex-class)
-  (if (isa? (class value) ex-class) (call handler value) value))
-
 ;; thread-first
 
 (defn then>
@@ -145,20 +133,10 @@
   [value handler]
   (then handler value))
 
-(defn then-call>
-  "Value-first version of `then-call`"
-  [value handler]
-  (then-call handler value))
-
 (defn else>
   "Value-first version of `else`"
   [value handler]
   (else handler value))
-
-(defn else-call>
-  "Value-first version of `else-call`"
-  [value handler]
-  (else-call handler value))
 
 (defn thru>
   "Value-first version of `thru`"
@@ -175,11 +153,6 @@
   [value ex-class handler]
   (else-if ex-class handler value))
 
-(defn else-call-if>
-  "Value-first version of `else-call-if`"
-  [value ex-class handler]
-  (else-call-if ex-class handler value))
-
 (defn thru-if>
   "Value-first version of `thru-if`"
   [value ex-class handler]
@@ -190,10 +163,9 @@
 (defmacro flet*
   [bindings & body]
   (if-let [[bind-name expression] (first bindings)]
-    `(let [result# (call (fn [] ~expression))]
-       (->> result#
-            (then (fn [~bind-name]
-                    (call (fn [] (flet* ~(rest bindings) ~@body)))))))
+    `(->> (call (fn [] ~expression))
+          (then (fn [~bind-name]
+                  (flet* ~(rest bindings) ~@body))))
     `(do ~@body)))
 
 (defmacro flet
