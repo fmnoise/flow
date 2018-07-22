@@ -162,7 +162,7 @@
 
 ;; flet
 
-(defmacro flet*
+(defmacro ^:no-doc flet*
   [bindings & body]
   (if-let [[bind-name expression] (first bindings)]
     `(->> (call (fn [] ~expression))
