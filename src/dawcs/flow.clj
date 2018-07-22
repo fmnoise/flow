@@ -45,12 +45,14 @@
 
 (defmacro catching
   "Executes body with `*exception-base-class*` bound to given class"
+  {:style/indent 1}
   [exception-base-class & body]
   `(binding [*exception-base-class* ~exception-base-class]
      ~@body))
 
 (defmacro ignoring
   "Executes body with `*ignored-exceptions*` bound to given value"
+  {:style/indent 1}
   [ignored-exceptions & body]
   `(binding [*ignored-exceptions* ~ignored-exceptions]
      ~@body))
@@ -170,5 +172,6 @@
 
 (defmacro flet
   "Enables common Clojure let syntax using bindings for processing with flow"
+  {:style/indent 1}
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
