@@ -10,9 +10,12 @@ Consider (not really) trivial example:
 ```clojure
 (try
   (next-dangerous-action (dangerous-action arg)))
-  (catch Exception _
+  (catch Exception e
+    (log-error "action failed" e)
     (try (dangerous-fallback-action)
-      (catch Exception _ default-value))))
+      (catch Exception e
+        (log-error "fallback action failed" e)
+        default-value))))
 ```
 Not too readable. Let's add some flow to it:
 
@@ -21,8 +24,10 @@ Not too readable. Let's add some flow to it:
 
 (->> (call dangerous-action arg)
      (then next-dangerous-action)
-     (else dangerous-fallback-action)
-     (either default-value))
+     (thru #(log-error "action failed" %))
+     (else (fn [_] (call dangerous-fallback-action)))
+     (thru #(log-error "fallback action failed" %))
+     (else (constantly default-value)))
 ```
 
 Flow follows core Clojure idea of "everything is data" and provides exception toolset based on idea of errors as data.
@@ -55,27 +60,13 @@ Each next flow function works with exception instance as a value, so instead of 
 (->> (call / 0 1) (else (comp :cause Throwable->map))) => 0
 ```
 
-**IMPORTANT** Both `else` and `then` uses `call` under the hood, so if something will fail in handler, this error will be caught and passed through rest of pipeline.
-
-**either** works similar to `else`, but accepts another value (default) and returns it in case of exception given in first agrument, otherwise returns first agrument:
+**thru** works the same as `else` but always returns given value, so supplied function is called only for side-effects(like error logging):
 ```clojure
-(->> (call / 1 0) (either 2)) ;; => 2
-(->> (call / 0 1) (either 2)) ;; => 0
+(->> (call / 1 0) (else println)) => nil
+(->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
 ```
 
-2 special functions are `raise` and `thru`:
-
-**raise** accepts 1 agrument and in case of exception given, throws it, otherwise simply returns given argument:
-```clojure
-(->> (call / 1 0) raise)) ;; throws ArithmeticException
-(->> (call / 0 1) raise)) ;; => 1
-```
-
-**thru** accepts value and function, and applies function to value if value is an exception and return given value. Keep in mind that function is called only for side-effects(like error logging).
-
-**IMPORTANT** `thru` doesn't wrap handler to try/catch by default, so you should do that manually if you need that
-
-As all described functions accept value as last agrument, they are ideal for `->>` macro or `partial` usage. But there are also variations for `->`: `then>`, `else>`, `either>` and `thru>`.
+**IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` doesn't wrap handler to `call`, so you should do it manually if you need that behavior.
 
 Another "real-life" example:
 
@@ -84,7 +75,7 @@ Another "real-life" example:
 (defn find-entity [id]
   (if (some? id)
     {:id id :name "Jack" :role :admin}
-    (f/fail "User not found" {:id id})))
+    (fail "User not found" {:id id})))
 
 (defn update-entity [entity data]
   (merge entity data))

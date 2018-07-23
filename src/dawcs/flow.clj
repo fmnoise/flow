@@ -10,17 +10,6 @@
   "Exception classes which will be ignored by `call`. Dynamic, defaults to empty set"
   #{})
 
-;; impl
-
-(defn- ex-class-arg-check [ex-class]
-  (when-not (isa? ex-class *exception-base-class*)
-    (throw (IllegalArgumentException. (str "ex-class argument should be a subclass of " *exception-base-class* " but got " ex-class " instead")))))
-
-(defn- catchable? [ex]
-  (let [ex-class (class ex)]
-    (and (isa? ex-class *exception-base-class*)
-         (not (some (partial isa? ex-class) *ignored-exceptions*)))))
-
 ;; setup
 
 (defn ignore-exceptions!
@@ -76,7 +65,12 @@
   ([msg data] (throw (ex-info msg (if (map? data) data {::context data}))))
   ([msg data cause] (throw (ex-info msg data cause))))
 
-;; base pipeline
+;; pipeline
+
+(defn- catchable? [ex]
+  (let [ex-class (class ex)]
+    (and (isa? ex-class *exception-base-class*)
+         (not (some (partial isa? ex-class) *ignored-exceptions*)))))
 
 (defn call
   "Wraps given function call with supplied args in `try/catch` block. When caught an exception
@@ -87,78 +81,21 @@
     (catch java.lang.Throwable t
       (if (catchable? t) t (throw t)))))
 
-(defn raise
-  "If value is a `fail?`, throws it, otherwise returns value"
-  [value]
-  (if (fail? value) (throw value) value))
-
 (defn then
   "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
   [handler value]
   (if (fail? value) value (call handler value)))
 
 (defn else
-  "If value is a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"
+  "If value is a `fail?`, calls handler on it, otherwise returns value"
   [handler value]
-  (if (fail? value) (call handler value) value))
+  (if (fail? value) (handler value) value))
 
 (defn thru
   "If value is an `fail?`, calls handler on it (for side effects). Returns value"
   [handler value]
   (when (fail? value) (handler value))
   value)
-
-(defn either
-  "If value is a `fail?`, returns default, otherwise returns value"
-  [default value]
-  (if (fail? value) default value))
-
-;; conditional pipeline
-
-(defn else-if
-  "If value is an exception of ex-class, applies handler to it, otherwise returns value"
-  [ex-class handler value]
-  (ex-class-arg-check ex-class)
-  (if (isa? (class value) ex-class) (call handler value) value))
-
-(defn thru-if
-  "If value is an exception of ex-class, calls handler on it (for side effects). Returns value"
-  [ex-class handler value]
-  (ex-class-arg-check ex-class)
-  (when (isa? (class value) ex-class) (handler value))
-  value)
-
-;; thread-first
-
-(defn then>
-  "Value-first version of `then`"
-  [value handler]
-  (then handler value))
-
-(defn else>
-  "Value-first version of `else`"
-  [value handler]
-  (else handler value))
-
-(defn thru>
-  "Value-first version of `thru`"
-  [value handler]
-  (thru handler value))
-
-(defn either>
-  "Value-first version of `either`"
-  [value default]
-  (either default value))
-
-(defn else-if>
-  "Value-first version of `else-if`"
-  [value ex-class handler]
-  (else-if ex-class handler value))
-
-(defn thru-if>
-  "Value-first version of `thru-if`"
-  [value ex-class handler]
-  (thru-if ex-class handler value))
 
 ;; flet
 
