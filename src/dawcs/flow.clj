@@ -46,23 +46,25 @@
   `(binding [*ignored-exceptions* ~ignored-exceptions]
      ~@body))
 
-;; construction
+;; checking
 
 (defn fail?
-  "Checks if value is Throwable"
-  [value]
-  (isa? (class value) java.lang.Throwable))
+  "Checks if value is exception of given class(optional, defaults to Throwable)"
+  ([value] (fail? Throwable value))
+  ([ex-class value]
+   {:pre [(isa? ex-class Throwable)]}
+   (isa? (class value) ex-class)))
+
+(defn ignored?
+  "Checks if exception class should be ignored"
+  [ex-class]
+  (some (partial isa? ex-class) *ignored-exceptions*))
 
 (defn fail
   "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
   ([msg] (fail msg {}))
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
-
-(defn ignored?
-  "Checks if exception class should be ignored"
-  [ex-class]
-  (some (partial isa? ex-class) *ignored-exceptions*))
 
 ;; pipeline
 
