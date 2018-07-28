@@ -86,7 +86,7 @@
   (if (fail? value) (handler value) value))
 
 (defn thru
-  "If value is an `fail?`, calls handler on it (for side effects). Returns value"
+  "If value is a `fail?`, calls handler on it (for side effects). Returns value"
   [handler value]
   (when (fail? value) (handler value))
   value)
