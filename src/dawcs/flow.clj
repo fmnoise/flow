@@ -13,19 +13,19 @@
 ;; setup
 
 (defn ignore-exceptions!
-  "Sets `*ignored-exceptions*` to given set via `alter-var-root`"
+  "Sets `*ignored-exceptions*` to given set"
   [ex-class-set]
   {:pre [(set? ex-class-set)]}
   (alter-var-root #'*ignored-exceptions* (constantly ex-class-set)))
 
 (defn add-ignored-exceptions!
-  "Adds given set of classes to `*ignored-exceptions*` via `alter-var-root`"
+  "Adds given set of classes to `*ignored-exceptions*`"
   [ex-class-set]
   {:pre [(set? ex-class-set)]}
   (alter-var-root #'*ignored-exceptions* into ex-class-set))
 
 (defn catch-from!
-  "Sets *exception-base-class* to given ex-class via `alter-var-root`"
+  "Sets *exception-base-class* to specified class"
   [ex-class]
   {:pre [(isa? ex-class Throwable)]}
   (alter-var-root #'*exception-base-class* (constantly ex-class)))
