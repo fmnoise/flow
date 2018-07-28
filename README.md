@@ -4,7 +4,7 @@ Handling exceptions in functional way
 
 ## Usage
 
-[![Clojars Project](https://img.shields.io/clojars/v/dawcs/flow.svg)](https://clojars.org/dawcs/flow)
+[![Current Version](https://clojars.org/dawcs/flow/latest-version.svg)](https://clojars.org/dawcs/flow)
 
 Consider (not really) trivial example:
 ```clojure
