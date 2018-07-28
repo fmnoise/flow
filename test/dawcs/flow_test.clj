@@ -7,7 +7,14 @@
     (is (not (fail? 42))))
 
   (testing "with exception argument"
-    (is (fail? (Exception. "oops")))))
+    (is (fail? (Exception. "oops"))))
+
+  (testing "with class argument"
+    (is (fail? Exception (NullPointerException. "oops")))
+    (is (not (fail? NullPointerException (Exception. "oops")))))
+
+  (testing "with wrong class argument"
+    (is (thrown? AssertionError (fail? String (Exception. "oops"))))))
 
 (deftest fail--test
   (testing "with 1 argument"
