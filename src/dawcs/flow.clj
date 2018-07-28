@@ -56,7 +56,7 @@
 (defn fail
   "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
   ([msg] (fail msg {}))
-  ([msg data] (ex-info msg (if (map? data) data {::context data})))
+  ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
 (defn fail!
