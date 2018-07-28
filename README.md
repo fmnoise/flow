@@ -66,7 +66,7 @@ Each next flow function works with exception instance as a value, so instead of 
 (->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
 ```
 
-**IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` doesn't wrap handler to `call`, so you should do it manually if you need that behavior.
+**IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that behavior.
 
 Another "real-life" example:
 
@@ -81,7 +81,7 @@ Another "real-life" example:
   (merge entity data))
 
 (defn notify-slack [err]
-  (prn "Slack notified"))
+  (prn "Slack notified:" err))
 
 (defn format-response [data]
   {:status 200 :entity data})
