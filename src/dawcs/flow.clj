@@ -59,12 +59,12 @@
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
-;; pipeline
+(defn ignored?
+  "Checks if exception class should be ignored"
+  [ex-class]
+  (some (partial isa? ex-class) *ignored-exceptions*))
 
-(defn- catchable? [ex]
-  (let [ex-class (class ex)]
-    (and (isa? ex-class *exception-base-class*)
-         (not (some (partial isa? ex-class) *ignored-exceptions*)))))
+;; pipeline
 
 (defn call
   "Wraps given function call with supplied args in `try/catch` block. When caught an exception
@@ -73,7 +73,11 @@
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
-      (if (catchable? t) t (throw t)))))
+      (let [ex-class (class t)]
+        (if (and (isa? ex-class *exception-base-class*)
+                 (not (ignored? ex-class)))
+          t
+          (throw t))))))
 
 (defn then
   "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
