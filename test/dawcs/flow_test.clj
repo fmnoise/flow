@@ -28,9 +28,6 @@
         (is (= "oops" (:cause m)))
         (is (= {::f/context 1} (:data m)))))))
 
-(deftest fail!--test
-  (is (thrown? clojure.lang.ExceptionInfo (fail! "oops"))))
-
 (deftest call--test
   (testing "without exception"
     (is (= (call #(+ 1 41)) 42)))

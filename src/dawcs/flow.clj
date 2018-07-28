@@ -59,12 +59,6 @@
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
-(defn fail!
-  "Creates new `ex-info` instance with given msg, data(optional) and cause(optional) and throws it"
-  ([msg] (fail! msg {}))
-  ([msg data] (throw (ex-info msg (if (map? data) data {::context data}))))
-  ([msg data cause] (throw (ex-info msg data cause))))
-
 ;; pipeline
 
 (defn- catchable? [ex]

@@ -68,7 +68,7 @@ Each next flow function works with exception instance as a value, so instead of 
 
 **IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that behavior.
 
-Another "real-life" example:
+More real-life example:
 
 ```clojure
 ;; some example dummy code
@@ -104,7 +104,7 @@ Another "real-life" example:
 ;; => {:status 500, :error "User not found", :context {:id nil}}
 ```
 
-This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there are `fail!` which throws created `clojure.lang.ExceptionInfo` and `fail?` which checks if given value class is subclass of `Throwable`.
+This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition ther's `fail?` which checks if given value class is subclass of `Throwable`.
 
 ### flet
 
