@@ -26,7 +26,7 @@
     (testing "with 2nd non-map argument"
       (let [m (-> (fail "oops" 1) Throwable->map)]
         (is (= "oops" (:cause m)))
-        (is (= {::f/context 1} (:data m)))))))
+        (is (= {::f/data 1} (:data m)))))))
 
 (deftest call--test
   (testing "without exception"
