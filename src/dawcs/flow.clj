@@ -69,9 +69,9 @@
 ;; pipeline
 
 (defn call
-  "Wraps given function call with supplied args in `try/catch` block. When caught an exception
-   which class is `*exception-base-class*`(defaults to `Throwable`) or a subclass of it,
-   returns it, otherwise `throw`s it. Returns function call result if no exception has caught"
+  "Calls given function with supplied args in `try/catch` block. When caught an exception
+   which class is `*exception-base-class*` or a subclass of it, and is not listed in `*ignored-exceptions*`(and is not a subclass of any classes listed there)
+   returns instance of caught exception, otherwise throws it. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
@@ -82,7 +82,7 @@
           (throw t))))))
 
 (defn then
-  "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
+  "If value is not a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"
   [handler value]
   (if (fail? value) value (call handler value)))
 
@@ -108,7 +108,7 @@
     `(do ~@body)))
 
 (defmacro flet
-  "Enables common Clojure let syntax using bindings for processing with flow"
+  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call`. If exception caught during binding evaluation, it's returned immediately and all other bindings and body are skipped"
   {:style/indent 1}
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
