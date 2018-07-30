@@ -1,7 +1,5 @@
 # flow [![CircleCI](https://circleci.com/gh/dawcs/flow/tree/master.svg?style=svg)](https://circleci.com/gh/dawcs/flow/tree/master)
 
-Handling exceptions in functional way
-
 ## Usage
 
 [![Current Version](https://clojars.org/dawcs/flow/latest-version.svg)](https://clojars.org/dawcs/flow)
@@ -143,8 +141,20 @@ Some exceptions (like `clojure.lang.ArityException`) may signal about bad code o
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
 
-For more info look https://dawcs.github.io/flow
+## FAQ
 
+Q: Is it an alternative to `finally` clause provided by flow?
+
+A: No, `finally` is currently not implented. Consider using `try/catch/finally` if you need that.
+
+
+Q: How about cljs support?
+
+A: cljs is not supported at the moment. Feel free to open PR if you need it.
+
+## API docs
+
+https://dawcs.github.io/flow
 
 ## License
 
