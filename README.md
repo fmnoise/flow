@@ -28,8 +28,6 @@ Not too readable. Let's add some `flow` to it:
      (else (constantly default-value)))
 ```
 
-Flow follows core Clojure idea of "everything is data" and provides exception toolset based on idea of errors as data.
-
 `call` is starting point to `flow`, it accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or call result:
 ```clojure
 (call / 1 0)
