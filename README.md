@@ -102,7 +102,7 @@ More real-life example:
 ;; => {:status 500, :error "User not found", :context {:id nil}}
 ```
 
-This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition ther's `fail?` which checks if given value class is subclass of `Throwable`.
+This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
 
 ### flet
 
