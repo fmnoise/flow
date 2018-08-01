@@ -15,7 +15,7 @@ Consider (not really) trivial example:
         (log-error "fallback action failed" e)
         default-value))))
 ```
-Not too readable. Let's add some flow to it:
+Not too readable. Let's add some `flow` to it:
 
 ```clojure
 (requre '[dawcs.flow :refer :all])
@@ -30,7 +30,7 @@ Not too readable. Let's add some flow to it:
 
 Flow follows core Clojure idea of "everything is data" and provides exception toolset based on idea of errors as data.
 
-**call** is starting point to flow, it accepts a function and its arguments, wraps function call to try/catch block and returns either caught exception instance or call result:
+`call` is starting point to `flow`, it accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or call result:
 ```clojure
 (call / 1 0)
  => #error {
@@ -44,21 +44,21 @@ Flow follows core Clojure idea of "everything is data" and provides exception to
 (call / 0 1) ;; => 0
 ```
 
-Each next flow function works with exception instance as a value, so instead of throwing it, it just returns it:
+Each next `flow` function works with exception instance as a value, so instead of throwing it, it just returns it:
 
-**then** applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception:
+`then` applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception:
 ```clojure
 (->> (call / 1 0) (then inc)) => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (then inc)) => 1
 ```
 
-**else** works as opposite, simply returning non-exception values and applying given function to value in case of exception:
+`else` works as opposite, simply returning non-exception values and applying given function to value in case of exception:
 ```clojure
 (->> (call / 1 0) (else (comp :cause Throwable->map))) => "Divide by zero"
 (->> (call / 0 1) (else (comp :cause Throwable->map))) => 0
 ```
 
-**thru** works the same as `else` but always returns given value, so supplied function is called only for side-effects(like error logging):
+`thru` works the same as `else` but always returns given value, so supplied function is called only for side-effects(like error logging):
 ```clojure
 (->> (call / 1 0) (else println)) => nil
 (->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
@@ -102,11 +102,11 @@ More real-life example:
 ;; => {:status 500, :error "User not found", :context {:id nil}}
 ```
 
-This example uses **fail** - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
+This example uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
 
 ### flet
 
-**flet** is exception-aware version of Clojure `let`. In case of exception thrown in bindings or body, it returns its instance, otherwise returns evaluation result.
+`flet` is exception-aware version of Clojure `let`. In case of exception thrown in bindings or body, it returns its instance, otherwise returns evaluation result.
 Let's rewrite previous example:
 
 ```clojure
