@@ -100,7 +100,26 @@ More real-life example:
 ;; => {:status 500, :error "User not found", :context {:id nil}}
 ```
 
-This example uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
+### fail
+
+Example above uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
+Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors without `throw` and `try/catch`. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else/thru` will process it correctly:
+```clojure
+(defn ratio [value total]
+ (if (pos-int? total)
+   (/ value total)
+   (fail "Total should be positive int")))
+
+(->> (ratio 1 0)
+     (then inc)
+     (thru prn)
+     (else (constantly 0))) ;; => 0
+
+(->> (ratio 0 1)
+     (then inc)
+     (thru prn)
+     (else (constantly 0))) ;; => 1
+```
 
 ### flet
 
@@ -141,7 +160,7 @@ Some exceptions (like `clojure.lang.ArityException`) may signal about bad code o
 
 ## FAQ
 
-Q: Is it an alternative to `finally` clause provided by flow?
+Q: Is there an alternative to `finally` clause provided by flow?
 
 A: No, `finally` is currently not implented. Consider using `try/catch/finally` if you need that.
 
