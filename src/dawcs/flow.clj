@@ -66,6 +66,21 @@
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
+(defn fail-cause
+  "Returns fail cause"
+  [fail]
+  (-> fail Throwable->map :cause))
+
+(defn fail-data
+  "Returns fail data"
+  [fail]
+  (-> fail Throwable->map :data))
+
+(defn fail-trace
+  "Returns fail trace"
+  [fail]
+  (-> fail Throwable->map :trace))
+
 ;; pipeline
 
 (defn call
