@@ -108,7 +108,7 @@
     `(do ~@body)))
 
 (defmacro flet
-  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call`. If exception caught during binding evaluation, it's returned immediately and all other bindings and body are skipped"
+  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call`. If `fail?` value returned from binding evaluation, it's returned immediately and all other bindings and body are skipped"
   {:style/indent 1}
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
