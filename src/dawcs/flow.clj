@@ -112,6 +112,19 @@
   (when (fail? value) (handler value))
   value)
 
+(defn else-if
+  "If value is an exception of ex-class, applies handler to it, otherwise returns value"
+  [ex-class handler value]
+  {:pre [(isa? ex-class Throwable)]}
+  (if (isa? (class value) ex-class) (handler value) value))
+
+(defn thru-if
+  "If value is an exception of ex-class, calls handler on it (for side effects). Returns value"
+  [ex-class handler value]
+  {:pre [(isa? ex-class Throwable)]}
+  (when (isa? (class value) ex-class) (handler value))
+  value)
+
 ;; flet
 
 (defmacro ^:no-doc flet*
