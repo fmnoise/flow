@@ -1,4 +1,4 @@
-(defproject dawcs/flow "0.1.1"
+(defproject dawcs/flow "0.1.2"
   :description "Declarative exceptions handling"
   :url "https://github.com/dawcs/flow"
   :license {:name "Eclipse Public License"
