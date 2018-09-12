@@ -70,11 +70,11 @@
 
 (deftest thru--test
   (testing "with non-exception argument"
-    (let [last-err (atom nil)
-          side-fx #(reset! last-err %)
+    (let [state (atom nil)
+          side-fx #(reset! state (inc %))
           res (thru side-fx 42)]
-      (is (= res 42))
-      (is (nil? @last-err))))
+      (is (= 42 res))
+      (is (= 43 @state))))
 
   (testing "with exception argument"
     (let [last-err (atom nil)
@@ -108,37 +108,6 @@
   (testing "with wrong exeption argument"
     (is (thrown? AssertionError
                  (else-if String
-                          (constantly "caught")
-                          (UnsupportedOperationException. "oops"))))))
-
-(deftest thru-if--test
-  (testing "with non-exception argument"
-    (let [last-err (atom nil)
-          side-fx #(reset! last-err %)
-          res (thru-if NullPointerException side-fx 42)]
-      (is (= res 42))
-      (is (nil? @last-err))))
-
-  (testing "with exception argument"
-    (testing "and class specification equal to exception class"
-      (let [err (NullPointerException. "oops")
-            last-err (atom nil)
-            side-fx #(reset! last-err %)
-            res (thru-if NullPointerException side-fx err)]
-        (is (= res err))
-        (is (= @last-err err))))
-
-    (testing "and class specification non-equal to exception class"
-      (let [err (UnsupportedOperationException. "oops")
-            last-err (atom nil)
-            side-fx #(reset! last-err %)
-            res (thru-if NullPointerException side-fx err)]
-        (is (= res err))
-        (is (= @last-err nil)))))
-
-  (testing "with wrong exception class argument"
-    (is (thrown? AssertionError
-                 (thru-if String
                           (constantly "caught")
                           (UnsupportedOperationException. "oops"))))))
 
