@@ -22,10 +22,12 @@ Not too readable. Let's add some `flow` to it:
 
 (->> (call dangerous-action arg)
      (then next-dangerous-action)
-     (thru #(log-error "action failed" %))
-     (else (fn [_] (call dangerous-fallback-action)))
-     (thru #(log-error "fallback action failed" %))
-     (else (constantly default-value)))
+     (else (fn [err]
+             (log-error "action failed" err)
+             (call dangerous-fallback-action)))
+     (else (fn [err]
+             (log-error "fallback action failed" %)
+             default-value)))
 ```
 
 `call` is starting point to `flow`, it accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or call result:
@@ -56,10 +58,10 @@ Each next `flow` function works with exception instance as a value, so instead o
 (->> (call / 0 1) (else (comp :cause Throwable->map))) => 0
 ```
 
-`thru` works the same as `else` but always returns given value, so supplied function is called only for side-effects(like error logging):
+`thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
-(->> (call / 1 0) (else println)) => nil
 (->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
+(->> (call / 0 1) (thru println)) => 0
 ```
 
 **IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that behavior.
@@ -90,8 +92,11 @@ More real-life example:
   (->> (call find-entity id)
        (then #(update-entity % updates))
        (then format-response)
-       (thru notify-slack)
-       (else (comp format-error Throwable->map))))
+       (else (fn [err]
+               (->> err
+                    (thru notify-slack)
+                    Throwable->map
+                    format-error)))))
 
 (persist-changes 123 {:department "IT"})
 ;; => {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
@@ -103,7 +108,7 @@ More real-life example:
 ### fail
 
 Example above uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
-Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors without `throw` and `try/catch`. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else/thru` will process it correctly:
+Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else/thru` will process it correctly.
 ```clojure
 (defn ratio [value total]
  (if (pos-int? total)
@@ -119,6 +124,17 @@ Besides being a helper for constructing `ex-info`, `fail` is perfect tool for pr
      (then inc)
      (thru prn)
      (else (constantly 0))) ;; => 1
+```
+Throwing ex-info instance may be also used as replacement for `return`:
+
+```clojure
+(->> (call get-objects)
+     (then (partial map
+                    (fn [obj]
+                      (if (unprocessable? obj)
+                        (throw (fail "Unprocessable object" {:object obj}))
+                        (calculate-result object))))))
+
 ```
 
 ### flet
