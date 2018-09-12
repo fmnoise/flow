@@ -18,11 +18,25 @@
 
 (deftest fail--test
   (testing "with 1 argument"
-    (let [e (-> (fail "oops"))
-          m (Throwable->map e)]
-      (is (= clojure.lang.ExceptionInfo (class e)))
-      (is (= "oops" (:cause m)))
-      (is (= {} (:data m)))))
+    (testing "with string argument"
+      (let [e (fail "oops")
+            m (Throwable->map e)]
+        (is (= clojure.lang.ExceptionInfo (class e)))
+        (is (= "oops" (:cause m)))
+        (is (= {} (:data m)))))
+    (testing "with non-string argument"
+      (testing "with map agrument"
+        (let [e (fail {:value 1})
+              m (Throwable->map e)]
+          (is (= clojure.lang.ExceptionInfo (class e)))
+          (is (= "UNKNOWN" (:cause m)))
+          (is (= {:value 1} (:data m)))))
+      (testing "with non-map agrument"
+        (let [e (fail 29)
+              m (Throwable->map e)]
+          (is (= clojure.lang.ExceptionInfo (class e)))
+          (is (= "UNKNOWN" (:cause m)))
+          (is (= {::f/data 29} (:data m)))))))
 
   (testing "with 2 arguments"
     (testing "with 2nd map argument"
