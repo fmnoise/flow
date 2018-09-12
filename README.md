@@ -108,7 +108,7 @@ More real-life example:
 ### fail
 
 Example above uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
-Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else/thru` will process it correctly.
+Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else` will process it correctly.
 ```clojure
 (defn ratio [value total]
  (if (pos-int? total)
