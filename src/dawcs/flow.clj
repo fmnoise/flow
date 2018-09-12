@@ -109,9 +109,9 @@
   (if (fail? value) (handler value) value))
 
 (defn thru
-  "If value is a `fail?`, calls handler on it (for side effects). Returns value"
+  "Calls handler on value (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
   [handler value]
-  (when (fail? value) (handler value))
+  (handler value)
   value)
 
 (defn else-if
@@ -119,13 +119,6 @@
   [ex-class handler value]
   {:pre [(isa? ex-class Throwable)]}
   (if (isa? (class value) ex-class) (handler value) value))
-
-(defn thru-if
-  "If value is an exception of ex-class, calls handler on it (for side effects). Returns value"
-  [ex-class handler value]
-  {:pre [(isa? ex-class Throwable)]}
-  (when (isa? (class value) ex-class) (handler value))
-  value)
 
 ;; flet
 
