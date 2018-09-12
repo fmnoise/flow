@@ -62,7 +62,9 @@
 
 (defn fail
   "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
-  ([msg] (fail msg {}))
+  ([msg-or-data] (if (string? msg-or-data)
+                   (fail msg {})
+                   (fail "NO MESSAGE" msg-or-data)))
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
