@@ -150,8 +150,11 @@ Let's rewrite previous example:
 
 (defn persist-changes [id updates]
   (->> (perform-update id updates)
-       (thru notify-slack)
-       (else (comp format-error Throwable->map))))
+       (else (fn [err]
+               (->> err
+                    (thru notify-slack)
+                    Throwable->map)
+                    format-error))))
 ```
 
 ### Tuning exceptions
@@ -178,7 +181,7 @@ Some exceptions (like `clojure.lang.ArityException`) may signal about bad code o
 
 Q: Is there an alternative to `finally` clause provided by flow?
 
-A: No, `finally` is currently not implented. Consider using `try/catch/finally` if you need that.
+A: `thru` may be used similarly to `finally`, despite it's not exactly the same. Consider using `try/catch/finally` if you need exact `finally` behavior.
 
 
 Q: How about cljs support?
