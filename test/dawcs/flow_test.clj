@@ -150,7 +150,6 @@
       (is (fail? (call #(throw (Exception. "oops"))))))))
 
 (deftest ignored-exceptions--test
-  (testing "call with changed *base-exception-class*"
-    (ignoring #{Exception}
-      (is (thrown? IllegalArgumentException (call #(throw (IllegalArgumentException. "oops")))))
-      (is (fail? (call #(throw (Throwable. "oops"))))))))
+  (ignoring #{Exception}
+    (is (thrown? IllegalArgumentException (call #(throw (IllegalArgumentException. "oops")))))
+    (is (fail? (call #(throw (Throwable. "oops")))))))
