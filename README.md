@@ -77,9 +77,13 @@ Ok, don't panic, let's add some flow:
 ### Basic blocks
 
 Let's see what's going on here:
+
 `fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument
+
 `then` accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance
+
 `else` works as opposite, simply returning non-exception values and applying given function to exception instance values
+
 `fail-data` is also small helper for extracting data passed to ex-info
 
 Ok, that looks simple and easy, but what if `update!` or any other function will throw real Exception?
