@@ -9,13 +9,13 @@ Consider trivial example:
 (defn handler [req db]
   (if-let [user (:user req)]
     (if-let [id (:id req)]
-      (if-let [entity (get db id)]
-        (if (accessible? entity user)
+      (if (get db id)
+        (if (accessible? db id user)
           (update! db id (:params req))
-          {:error "User cannot update entity" :code 403})
-        {:error "Entity not found"  :code 404})
-      {:error "Missing entity id"  :code 400})
-    {:error "Login required"  :code 401}))
+          {:error "Access denied" :code 403})
+        {:error "Entity not found" :code 404})
+      {:error "Missing entity id" :code 400})
+    {:error "Login required" :code 401}))
 ```
 Looks ugly enough? How about extracting each check to function?
 
@@ -36,9 +36,9 @@ Looks ugly enough? How about extracting each check to function?
     {:error "Entity not found" :code 404}))
 
 (defn check-access [req db next]
-  (if (accessible? (get db (:id req)) (:user req))
+  (if (accessible? db (:id req) (:user req))
     next
-    {:error "User cannot update entity"  :code 403}))
+    {:error "Access denied" :code 403}))
 
 (defn update-entity [req db]
   (update! db (:id req) (:params req)))
@@ -53,8 +53,9 @@ Looks ugly enough? How about extracting each check to function?
 Hmm, that haven't made it better. Adding threading macro (for readability) adds obscurity instead due to reversed order:
 ```clojure
 (defn handler [req db]
-  (->> (upate-entity db req)
+  (->> (upate-entity req db)
        (check-access req db)
+       (check-entity req db)
        (check-id req)
        (check-login req)))
 ```
