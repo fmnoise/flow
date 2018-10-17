@@ -4,6 +4,8 @@
 
 [![Current Version](https://clojars.org/dawcs/flow/latest-version.svg)](https://clojars.org/dawcs/flow)
 
+### Motivation
+
 Consider trivial example:
 ```clojure
 (defn handler [req db]
@@ -71,6 +73,9 @@ Ok, don't panic, let's add some flow:
        (then (fn [_] (update! db id params)))
        (else fail-data)))
 ```
+
+### Basic blocks
+
 Let's see what's going on here:
 `fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument
 `then` accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance
