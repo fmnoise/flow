@@ -4,129 +4,102 @@
 
 [![Current Version](https://clojars.org/dawcs/flow/latest-version.svg)](https://clojars.org/dawcs/flow)
 
-Consider (not really) trivial example:
+Consider trivial example:
 ```clojure
-(try
-  (next-dangerous-action (dangerous-action arg)))
-  (catch Exception e
-    (log-error "action failed" e)
-    (try (dangerous-fallback-action)
-      (catch Exception e
-        (log-error "fallback action failed" e)
-        default-value))))
+(defn handler [req db]
+  (if-let [user (:user req)]
+    (if-let [id (:id req)]
+      (if-let [entity (get db id)]
+        (if (accessible? entity user)
+          (update! db id (:params req))
+          {:error "User cannot update entity" :code 403})
+        {:error "Entity not found"  :code 404})
+      {:error "Missing entity id"  :code 400})
+    {:error "Login required"  :code 401}))
 ```
-Not too readable. Let's add some `flow` to it:
+Looks ugly enough? How about extracting each check to function?
 
 ```clojure
-(requre '[dawcs.flow :refer :all])
+(defn check-login [req next]
+  (if (:user req)
+    next
+    {:error "Login required"  :code 401}))
 
-(->> (call dangerous-action arg)
-     (then next-dangerous-action)
-     (else (fn [err]
-             (log-error "action failed" err)
-             (call dangerous-fallback-action)))
-     (else (fn [err]
-             (log-error "fallback action failed" %)
-             default-value)))
+(defn check-id [req next]
+  (if (:id req)
+    next
+    {:error "Missing entity id" :code 400}))
+
+(defn check-entity [req db next]
+  (if (get db (:id req))
+    next
+    {:error "Entity not found" :code 404}))
+
+(defn check-access [req db next]
+  (if (accessible? (get db (:id req)) (:user req))
+    next
+    {:error "User cannot update entity"  :code 403}))
+
+(defn update-entity [req db]
+  (update! db (:id req) (:params req)))
+
+(defn handler [req db]
+  (check-login
+   req
+   (check-id req
+             (check-entity req db
+                           (check-access req db (upate-entity db req))))))
 ```
-
-`call` is starting point to `flow`, it accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or call result:
+Hmm, that haven't made it better. Adding threading macro (for readability) adds obscurity instead due to reversed order:
 ```clojure
-(call / 1 0)
- => #error {
-     :cause "Divide by zero"
-     :via
-     [{:type java.lang.ArithmeticException
-       :message "Divide by zero"
-       :at [clojure.lang.Numbers divide "Numbers.java" 158]}]
-     :trace ...}
-
-(call / 0 1) ;; => 0
+(defn handler [req db]
+  (->> (upate-entity db req)
+       (check-access req db)
+       (check-id req)
+       (check-login req)))
 ```
+Ok, don't panic, let's add some flow:
+```
+(require '[dawcs.flow :refer [then else fail fail-data]])
 
-Each next `flow` function works with exception instance as a value, so instead of throwing it, it just returns it:
+(defn handler [{:keys [id user params]} db]
+  (->> (or user (fail {:error "Login required" :code 401}))
+       (then (fn [_] (or id (fail {:error "Missing entity id" :code 400}))))
+       (then (fn [_] (or (get db id) (fail {:error "Entity not found" :code 404}))))
+       (then (fn [_] (or (accessible? db id user) (fail {:error "User cannot update entity" :code 403}))))
+       (then (fn [_] (update! db id params)))
+       (else fail-data)))
+```
+Let's see what's going on here:
+`fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument
+`then` accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance
+`else` works as opposite, simply returning non-exception values and applying given function to exception instance values
+`fail-data` is also small helper for extracting data passed to ex-info
 
-`then` applies its first agrument(function) to its second agrument(value) if value is not an exception, otherwise it just returns that exception:
+Ok, that looks simple and easy, but what if `update!` or any other function will throw real Exception?
+`then` is designed to catch all exceptions and return their instances so any exception will go through chain correctly.
+If we need to start a chain with something which can throw an exception, we should use `call`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
 ```clojure
-(->> (call / 1 0) (then inc)) => #error {:cause "Divide by zero" :via ...}
-(->> (call / 0 1) (then inc)) => 1
+(call / 1 0) => #error {:cause "Divide by zero" :via ...}
+(call / 0 1) => 0
 ```
 
-`else` works as opposite, simply returning non-exception values and applying given function to value in case of exception:
-```clojure
-(->> (call / 1 0) (else (comp :cause Throwable->map))) => "Divide by zero"
-(->> (call / 0 1) (else (comp :cause Throwable->map))) => 0
-```
+`else` has also a syntax-sugar version: `else-if`, it accepts exception class as first agrument, making it pretty useful as functional `catch` branches replacement:
+(->> (call / 1 0)
+     (then inc) ;; bypassed
+     (else-if ArithmeticError :bad-math)
+     (else-if Throwable :unknown-error)) ;; this is also bypassed cause previous function will return normal value
 
-`thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
+If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. `thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
 (->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (thru println)) => 0
 ```
+`thru` may be used similarly to `finally`, despite it's not exactly the same.
 
-**IMPORTANT!** `then` uses `call` under the hood, so if handler fails, error will be caught and passed through rest of pipeline. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that behavior.
+**IMPORTANT!** `then` uses `call` under the hood to catch exception instances. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that.
 
-More real-life example:
-
-```clojure
-;; some example dummy code
-(defn find-entity [id]
-  (if (some? id)
-    {:id id :name "Jack" :role :admin}
-    (fail "User not found" {:id id})))
-
-(defn update-entity [entity data]
-  (merge entity data))
-
-(defn notify-slack [err]
-  (prn "Slack notified:" err))
-
-(defn format-response [data]
-  {:status 200 :entity data})
-
-(defn format-error [{:keys [cause data]}]
-  {:status 500 :error cause :context data})
-
-;; pipeline
-(defn persist-changes [id updates]
-  (->> (call find-entity id)
-       (then #(update-entity % updates))
-       (then format-response)
-       (else (fn [err]
-               (->> err
-                    (thru notify-slack)
-                    Throwable->map
-                    format-error)))))
-
-(persist-changes 123 {:department "IT"})
-;; => {:status 200, :entity {:id 123, :name "Jack", :role :admin, :department "IT"}}
-
-(persist-changes nil {:department "IT"})
-;; => {:status 500, :error "User not found", :context {:id nil}}
-```
-
-### fail
-
-Example above uses `fail` - simple wrapper around Clojure's core `ex-info` which allows to call it with single argument(passing empty map as second one). In addition there's `fail?` which checks if given value class is subclass of `Throwable`.
-Besides being a helper for constructing `ex-info`, `fail` is perfect tool for propagating errors. Function can simply return `fail` as a signal that something went wrong during processing, so `then/else` will process it correctly.
-```clojure
-(defn ratio [value total]
- (if (pos-int? total)
-   (/ value total)
-   (fail "Total should be positive int")))
-
-(->> (ratio 1 0)
-     (then inc)
-     (thru prn)
-     (else (constantly 0))) ;; => 0
-
-(->> (ratio 0 1)
-     (then inc)
-     (thru prn)
-     (else (constantly 0))) ;; => 1
-```
-Throwing ex-info instance may be also used as replacement for `return`:
-
+Having in mind that `then` will catch exceptions and return them immediately, throwing `fail` may be used as replacement for `return`:
 ```clojure
 (->> (call get-objects)
      (then (partial map
@@ -137,27 +110,7 @@ Throwing ex-info instance may be also used as replacement for `return`:
 
 ```
 
-### flet
-
-`flet` is exception-aware version of Clojure `let`. In case of exception thrown in bindings or body, it returns its instance, otherwise returns evaluation result.
-Let's rewrite previous example:
-
-```clojure
-(defn perform-update [id updates]
-  (flet [entity (find-entity id)
-         updated-entity (update-entity entity updates)]
-    (format-response updated-entity)))
-
-(defn persist-changes [id updates]
-  (->> (perform-update id updates)
-       (else (fn [err]
-               (->> err
-                    (thru notify-slack)
-                    Throwable->map)
-                    format-error))))
-```
-
-### Tuning exceptions
+### Tuning exception catching
 
 `call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
 ```clojure
@@ -176,21 +129,6 @@ Some exceptions (like `clojure.lang.ArityException`) may signal about bad code o
 ;; dynamically define for a block of code
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
-
-## FAQ
-
-Q: Is there an alternative to `finally` clause provided by flow?
-
-A: `thru` may be used similarly to `finally`, despite it's not exactly the same. Consider using `try/catch/finally` if you need exact `finally` behavior.
-
-
-Q: How about cljs support?
-
-A: cljs is not supported at the moment. Feel free to open PR if you need it.
-
-## API docs
-
-https://dawcs.github.io/flow
 
 ## License
 
