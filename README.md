@@ -59,7 +59,7 @@ Hmm, that haven't made it better. Adding threading macro (for readability) adds 
        (check-login req)))
 ```
 Ok, don't panic, let's add some flow:
-```
+```clojure
 (require '[dawcs.flow :refer [then else fail fail-data]])
 
 (defn handler [{:keys [id user params]} db]
@@ -85,10 +85,12 @@ If we need to start a chain with something which can throw an exception, we shou
 ```
 
 `else` has also a syntax-sugar version: `else-if`, it accepts exception class as first agrument, making it pretty useful as functional `catch` branches replacement:
+```clojure
 (->> (call / 1 0)
      (then inc) ;; bypassed
      (else-if ArithmeticError :bad-math)
      (else-if Throwable :unknown-error)) ;; this is also bypassed cause previous function will return normal value
+```
 
 If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. `thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
