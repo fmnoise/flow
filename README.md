@@ -123,7 +123,7 @@ Having in mind that `then` will catch exceptions and return them immediately, th
 ```
 
 ### flet
-`flet` is fail-aware version of Clojure `let`, which wraps all evaluations to `call`. In case of fail returned from calculating bindings or body, it returns its instance, otherwise returns evaluation result.
+`flet` is fail-aware version of Clojure `let`, which wraps all evaluations to `call`. In case of fail returned during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`.
 
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
