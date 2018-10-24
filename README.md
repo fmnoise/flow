@@ -1,4 +1,4 @@
-# flow [![CircleCI](https://circleci.com/gh/dawcs/flow/tree/master.svg?style=svg)](https://circleci.com/gh/dawcs/flow/tree/master)
+# flow [![CircleCI](https://circleci.com/gh/dawcs/flow/tree/master.svg?style=svg)](https://circleci.com/gh/dawcs/flow/tree/master) [![cljdoc badge](https://cljdoc.xyz/badge/dawcs/flow)](https://cljdoc.xyz/d/dawcs/flow/CURRENT)
 
 ## Usage
 
