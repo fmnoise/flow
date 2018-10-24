@@ -133,7 +133,7 @@ Another example where early return may be useful is `let`:
        (then #(store-to-db %))
        (else log-error)))
 ```
-Wrapping function to `call` and throwing inside `let` in order to achieve early return in case of failure may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
+Wrapping function to `call` and throwing inside `let` in order to achieve early return in case of failure may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
 (flet [a 1 b (fail "oops")] (+ a b)) ;; => #error { :cause "oops" ... }
