@@ -122,6 +122,17 @@ Having in mind that `then` will catch exceptions and return them immediately, th
 
 ```
 
+### flet
+`flet` is fail-aware version of Clojure `let`, which wraps all evaluations to `call`. In case of fail returned from calculating bindings or body, it returns its instance, otherwise returns evaluation result.
+
+```clojure
+(flet [a 1 b 2] (+ a b)) ;; => 3
+(flet [a 1 b (fail "oops")] (+ a b)) ;; => #error { :cause "oops" ... }
+(flet [a 1 b 2] (fail "oops")) ;; => #error { :cause "oops" ... }
+(flet [a 1 b (throw (Exception. "boom"))] (+ a b)) ;; => #error { :cause "boom" ... }
+(flet [a 1 b 2] (throw (Exception. "boom"))) ;; => #error { :cause "boom" ... }
+```
+
 ### Tuning exception catching
 
 `call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
