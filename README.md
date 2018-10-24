@@ -50,12 +50,12 @@ Looks ugly enough? How about extracting each check to function?
    req
    (check-id req
              (check-entity req db
-                           (check-access req db (upate-entity db req))))))
+                           (check-access req db (update-entity db req))))))
 ```
 Hmm, that haven't made it better. Adding threading macro (for readability) adds obscurity instead due to reversed order:
 ```clojure
 (defn handler [req db]
-  (->> (upate-entity req db)
+  (->> (update-entity req db)
        (check-access req db)
        (check-entity req db)
        (check-id req)
