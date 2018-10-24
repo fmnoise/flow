@@ -78,7 +78,7 @@ Ok, don't panic, let's add some flow:
 
 Let's see what's going on here:
 
-`fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument
+`fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument. There's also `fail?` helper which checks if given value is an instance of `Throwable`.
 
 `then` accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance
 
