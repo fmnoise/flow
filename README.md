@@ -90,8 +90,8 @@ Ok, that looks simple and easy, but what if `update!` or any other function will
 `then` is designed to catch all exceptions and return their instances so any exception will go through chain correctly.
 If we need to start a chain with something which can throw an exception, we should use `call`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
 ```clojure
-(call / 1 0) => #error {:cause "Divide by zero" :via ...}
-(call / 0 1) => 0
+(call / 1 0) ;; => #error {:cause "Divide by zero" :via ...}
+(call / 0 1) ;; => 0
 ```
 
 `else` has also a syntax-sugar version: `else-if`, it accepts exception class as first agrument, making it pretty useful as functional `catch` branches replacement:
@@ -104,8 +104,8 @@ If we need to start a chain with something which can throw an exception, we shou
 
 If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. `thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
-(->> (call / 1 0) (thru println)) => #error {:cause "Divide by zero" :via ...}
-(->> (call / 0 1) (thru println)) => 0
+(->> (call / 1 0) (thru println)) ;; => #error {:cause "Divide by zero" :via ...}
+(->> (call / 0 1) (thru println)) ;; => 0
 ```
 `thru` may be used similarly to `finally`, despite it's not exactly the same.
 
