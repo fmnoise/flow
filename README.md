@@ -84,7 +84,7 @@ Let's see what's going on here:
 
 `else` works as opposite, simply returning non-exception values and applying given function to exception instance values
 
-`fail-data` is also small helper for extracting data passed to ex-info
+`fail-data` is also small helper for extracting data passed to ex-info. There are also `fail-cause` and `fail-trace` for extracting ex-info message and traceroute respectively.
 
 Ok, that looks simple and easy, but what if `update!` or any other function will throw real Exception?
 `then` is designed to catch all exceptions and return their instances so any exception will go through chain correctly.
@@ -102,7 +102,7 @@ If we need to start a chain with something which can throw an exception, we shou
      (else-if Throwable :unknown-error)) ;; this is also bypassed cause previous function will return normal value
 ```
 
-If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. `thru` works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
+If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. It works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
 (->> (call / 1 0) (thru println)) ;; => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (thru println)) ;; => 0
