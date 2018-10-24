@@ -122,15 +122,31 @@ Having in mind that `then` will catch exceptions and return them immediately, th
 
 ```
 
-### flet
-`flet` is fail-aware version of Clojure `let`, which wraps all evaluations to `call`. In case of fail returned during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`.
-
+Another example where early return may be useful is `let`:
+```clojure
+(defn assign-manager [db report-id manager-id]
+  (->> (call
+         (fn []
+           (let [report (->> (call db-find db report-id) (else (throw %)))
+                 manager (->> (call db-find db manager-id) (else (throw %)))]
+             {:manager manager :report report})))
+       (then #(store-to-db %))
+       (else log-error)))
+```
+Wrapping function to `call` and throwing inside `let` in order to achieve early return in case of failure may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
 (flet [a 1 b (fail "oops")] (+ a b)) ;; => #error { :cause "oops" ... }
 (flet [a 1 b 2] (fail "oops")) ;; => #error { :cause "oops" ... }
 (flet [a 1 b (throw (Exception. "boom"))] (+ a b)) ;; => #error { :cause "boom" ... }
 (flet [a 1 b 2] (throw (Exception. "boom"))) ;; => #error { :cause "boom" ... }
+
+(defn assign-manager [db report-id manager-id]
+  (->> (flet [report (call db-find db report-id)
+              manager (call db-find db manager-id)]
+         {:manager manager :report report})
+       (then #(store-to-db %))
+       (else log-error)))
 ```
 
 ### Tuning exception catching
