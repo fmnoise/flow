@@ -177,7 +177,7 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 
 ## Acknowledgements
 
-Special thanks to Scott Wlaschin for his inspiting talk about Railway Oriented Programming
+Thanks to Scott Wlaschin for his inspiring talk about Railway Oriented Programming
 https://fsharpforfunandprofit.com/rop/
 
 ## License
