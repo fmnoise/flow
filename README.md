@@ -149,17 +149,19 @@ Wrapping function to `call` and throwing inside `let` in order to achieve early 
        (else log-error)))
 ```
 
-### Tuning exception catching
+### Tuning exceptions catching
 
 `call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
 ```clojure
+;; global override
 (catch-from! java.lang.Exception)
 
 ;; dynamically define for a block of code
 (catching java.lang.Exception (call / 1 0))
 ```
-Some exceptions (like `clojure.lang.ArityException`) may signal about bad code or typo and throwing them may help to find it as early as possible, so it may be added to ignored exceptions list, so all pipeline functions will not catch these exceptions and it will throw:
+Some exceptions (like `clojure.lang.ArityException`) signal about bad code or typo and throwing them helps to find it as early as possible, while catching may lead to obscurity and hidden problems. In order to prevent catching them by `call`, certain exception classes may be added to ignored exceptions list:
 ```clojure
+;; global override
 (ignore-exceptions! #{IllegalArgumentException ClassCastException})
 
 ;; add without overwriting previous values
