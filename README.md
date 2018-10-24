@@ -171,6 +171,15 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
 
+## Who’s using Flow?
+
+- [Eventum](https://eventum.no) - connects event organizers with their dream venue
+
+## Acknowledgements
+
+Special thanks to Scott Wlaschin for his inspiting talk about Railway Oriented Programming
+https://fsharpforfunandprofit.com/rop/
+
 ## License
 
 Copyright © 2018 DAWCS
