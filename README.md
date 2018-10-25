@@ -78,23 +78,13 @@ Ok, don't panic, let's add some flow:
 
 Let's see what's going on here:
 
-`fail` is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument. There's also `fail?` helper which checks if given value is an instance of `Throwable`.
+![flow diagram](https://raw.githubusercontent.com/dawcs/flow/master/doc/flow.png)
 
-`then` accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance
+*fail* is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument. There's also `fail?` helper which checks if given value is an instance of `Throwable`.
 
-`else` works as opposite, simply returning non-exception values and applying given function to exception instance values
+*then* accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance.
 
-`fail-data` is also small helper for extracting data passed to ex-info. There are also `fail-cause` and `fail-trace` for extracting ex-info message and traceroute respectively.
-
-Ok, that looks simple and easy, but what if `update!` or any other function will throw real Exception?
-`then` is designed to catch all exceptions and return their instances so any exception will go through chain correctly.
-If we need to start a chain with something which can throw an exception, we should use `call`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
-```clojure
-(call / 1 0) ;; => #error {:cause "Divide by zero" :via ...}
-(call / 0 1) ;; => 0
-```
-
-`else` has also a syntax-sugar version: `else-if`, it accepts exception class as first agrument, making it pretty useful as functional `catch` branches replacement:
+*else* works as opposite, simply returning non-exception values and applying given function to exception instance values. There's also a syntax-sugar version - *else-if*. It accepts exception class as first agrument, making it pretty useful as functional `catch` branches replacement:
 ```clojure
 (->> (call / 1 0)
      (then inc) ;; bypassed
@@ -102,7 +92,17 @@ If we need to start a chain with something which can throw an exception, we shou
      (else-if Throwable :unknown-error)) ;; this is also bypassed cause previous function will return normal value
 ```
 
-If we need to pass both cases (exception instances and normal values) through some function, `thru` is right tool. It works similar to `doto` but accepts function as first argument, so supplied function is called only for side-effects(like error logging or cleaning up):
+*fail-data* is also small helper for extracting data passed to `ex-info`. There are also *fail-cause* and *fail-trace* for extracting `ex-info` message and traceroute respectively.
+
+Ok, that looks simple and easy, but what if `update!` or any other function will throw exception instead of returning `fail`?
+`then` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain.
+If we need to start a chain with something which can throw an exception, we should use *call* instead of `then`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
+```clojure
+(->> (call / 1 0) (then inc)) ;; => #error {:cause "Divide by zero" :via ...}
+(->> (call / 0 1) (then inc)) ;; => 1
+```
+
+If we need to pass both cases (exception instances and normal values) through some function, *thru* is right tool. It works similar to `doto` but accepts function as first argument. It always returns given value, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
 (->> (call / 1 0) (thru println)) ;; => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (thru println)) ;; => 0
@@ -110,6 +110,8 @@ If we need to pass both cases (exception instances and normal values) through so
 `thru` may be used similarly to `finally`, despite it's not exactly the same.
 
 **IMPORTANT!** `then` uses `call` under the hood to catch exception instances. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that.
+
+### Early return
 
 Having in mind that `then` will catch exceptions and return them immediately, throwing `fail` may be used as replacement for `return`:
 ```clojure
