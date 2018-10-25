@@ -108,6 +108,7 @@ If we need to pass both cases (exception instances and normal values) through so
 `thru` may be used similarly to `finally`, despite it's not exactly the same.
 
 And a small cheatsheet to summarize on basic blocks:
+
 ![cheatsheet](https://raw.githubusercontent.com/dawcs/flow/master/doc/flow.png)
 
 **IMPORTANT!** `then` uses `call` under the hood to catch exception instances. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that.
