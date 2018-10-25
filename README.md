@@ -131,8 +131,8 @@ Another example where early return may be useful is `let`:
 (defn assign-manager [db report-id manager-id]
   (->> (call
          (fn []
-           (let [report (->> (call db-find db report-id) (else (throw %)))
-                 manager (->> (call db-find db manager-id) (else (throw %)))]
+           (let [report (->> (call db-find db report-id) (else #(throw %)))
+                 manager (->> (call db-find db manager-id) (else #(throw %)))]
              {:manager manager :report report})))
        (then #(store-to-db %))
        (else log-error)))
