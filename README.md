@@ -86,8 +86,8 @@ Let's see what's going on here:
 ```clojure
 (->> (call / 1 0)
      (then inc) ;; bypassed
-     (else-if ArithmeticError :bad-math)
-     (else-if Throwable :unknown-error)) ;; this is also bypassed cause previous function will return normal value
+     (else-if ArithmeticError (constantly :bad-math))
+     (else-if Throwable (constantly :unknown-error))) ;; this is also bypassed cause previous function will return normal value
 ```
 
 **fail-data** is also small helper for extracting data passed to `ex-info`. There are also **fail-cause** and **fail-trace** for extracting `ex-info` message and traceroute respectively.
