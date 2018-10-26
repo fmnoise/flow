@@ -90,7 +90,7 @@ Let's see what's going on here:
      (else-if Throwable (constantly :unknown-error))) ;; this is also bypassed cause previous function will return normal value
 ```
 
-**fail-data** is also small helper for extracting data passed to `ex-info`. There are also **fail-cause** and **fail-trace** for extracting `ex-info` message and traceroute respectively.
+**fail-data** is also small helper for extracting data passed to `ex-info`. There are also **fail-cause** and **fail-trace** for extracting `ex-info` message and stacktrace respectively.
 
 Ok, that looks simple and easy, but what if `update!` or any other function will throw exception instead of returning `fail`?
 `then` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain.
