@@ -100,7 +100,7 @@ If we need to start a chain with something which can throw an exception, we shou
 (->> (call / 0 1) (then inc)) ;; => 1
 ```
 
-If we need to pass both cases (exception instances and normal values) through some function, *thru* is right tool. It works similar to `doto` but accepts function as first argument. It always returns given value, so supplied function is called only for side-effects(like error logging or cleaning up):
+If we need to pass both cases (exception instances and normal values) through some function, **thru** is right tool. It works similar to `doto` but accepts function as first argument. It always returns given value, so supplied function is called only for side-effects(like error logging or cleaning up):
 ```clojure
 (->> (call / 1 0) (thru println)) ;; => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (thru println)) ;; => 0
