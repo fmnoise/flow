@@ -2,7 +2,7 @@
 
 ;; vars
 
-(def ^:dynamic *exception-base-class*
+(def ^:dynamic *catch-from*
   "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"
   java.lang.Throwable)
 
@@ -28,7 +28,7 @@
   "Sets *exception-base-class* to specified class"
   [ex-class]
   {:pre [(isa? ex-class Throwable)]}
-  (alter-var-root #'*exception-base-class* (constantly ex-class)))
+  (alter-var-root #'*catch-from* (constantly ex-class)))
 
 ;; dynamic wrappers
 
@@ -36,7 +36,7 @@
   "Executes body with `*exception-base-class*` bound to given class"
   {:style/indent 1}
   [exception-base-class & body]
-  `(binding [*exception-base-class* ~exception-base-class]
+  `(binding [*catch-from* ~exception-base-class]
      ~@body))
 
 (defmacro ignoring
@@ -50,15 +50,20 @@
 
 (defn fail?
   "Checks if value is exception of given class(optional, defaults to Throwable)"
-  ([value] (fail? Throwable value))
-  ([ex-class value]
+  ([t] (fail? Throwable t))
+  ([ex-class t]
    {:pre [(isa? ex-class Throwable)]}
-   (isa? (class value) ex-class)))
+   (isa? (class t) ex-class)))
 
 (defn ignored?
-  "Checks if exception class should be ignored"
-  [ex-class]
-  (some (partial isa? ex-class) *ignored-exceptions*))
+  "Checks if exception should be ignored"
+  [t]
+  {:pre [(instance? Throwable t)]}
+  (let [ex-class (class t)]
+    (or (not (isa? ex-class *catch-from*))
+        (some (partial isa? ex-class) *ignored-exceptions*))))
+
+;; construction
 
 (defn fail
   "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
@@ -67,21 +72,6 @@
                    (fail nil msg-or-data)))
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
-
-(defn ^{:deprecated "0.5.0"} fail-cause
-  "Returns fail cause(message). Deprecated due to ambiguous name"
-  [fail]
-  (-> fail Throwable->map :cause))
-
-(defn ^{:deprecated "0.5.0"} fail-data
-  "Returns fail data. Deprecated, use ex-data instead"
-  [fail]
-  (ex-data fail))
-
-(defn ^{:deprecated "0.5.0"} fail-trace
-  "Returns fail trace. Deprecated"
-  [fail]
-  (-> fail Throwable->map :trace))
 
 ;; pipeline
 
@@ -92,11 +82,7 @@
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
-      (let [ex-class (class t)]
-        (if (and (isa? ex-class *exception-base-class*)
-                 (not (ignored? ex-class)))
-          t
-          (throw t))))))
+      (if (ignored? t) (throw t) t))))
 
 (defn then
   "If value is not a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"

@@ -16,6 +16,14 @@
   (testing "with wrong class argument"
     (is (thrown? AssertionError (fail? String (Exception. "oops"))))))
 
+(deftest ignored?--test
+  (catching RuntimeException
+    (ignoring #{NullPointerException}
+      (is (ignored? (Throwable. "oops")))
+      (is (ignored? (NullPointerException. "oops")))
+      (is (not (ignored? (ArithmeticException. "oops"))))
+      (is (thrown? AssertionError (ignored? 42))))))
+
 (deftest fail--test
   (testing "with 1 argument"
     (testing "with string argument"
