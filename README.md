@@ -175,7 +175,7 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 
 ## Status
 
-API is considered stable since version `1.0.0`
+API is considered stable since version `1.0.0`. See changelog for the list of breaking changes.
 
 ## Hammock
 
