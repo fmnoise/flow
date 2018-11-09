@@ -66,18 +66,29 @@
 ;; construction
 
 (defn fail
-  "Creates new `ex-info` instance with given msg, data(optional) and cause(optional)"
-  ([msg-or-data] (if (string? msg-or-data)
-                   (fail msg-or-data {})
-                   (fail nil msg-or-data)))
-  ([msg data] (ex-info msg (if (map? data) data {::data data})))
-  ([msg data cause] (ex-info msg data cause)))
+  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil)"
+  ([] (ex-info nil {}))
+  ([msg-or-data]
+   (if (string? msg-or-data)
+     (ex-info msg-or-data {})
+     (fail nil msg-or-data)))
+  ([msg data]
+   {:pre [(string? msg)]}
+   (ex-info msg (if (map? data) data {::data data})))
+  ([msg data cause]
+   {:pre [(string? msg) (instance? Throwable cause)]}
+   (ex-info msg (if (map? data) data {::data data}) cause)))
+
+(defn fail!
+  "Constructs `fail` with given args and throws it"
+  [& args]
+  (throw (apply fail args)))
 
 ;; pipeline
 
 (defn call
   "Calls given function with supplied args in `try/catch` block. When caught an exception
-   which class is `*exception-base-class*` or a subclass of it, and is not listed in `*ignored-exceptions*`(and is not a subclass of any classes listed there)
+   which class is `*catch-from*` or a subclass of it, and is not listed in `*ignored-exceptions*`(and is not a subclass of any classes listed there)
    returns instance of caught exception, otherwise throws it. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)

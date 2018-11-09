@@ -25,6 +25,13 @@
       (is (thrown? AssertionError (ignored? 42))))))
 
 (deftest fail--test
+  (testing "with 0 arguments"
+    (let [e (fail)
+          m (Throwable->map e)]
+      (is (= clojure.lang.ExceptionInfo (class e)))
+      (is (= nil (:cause m)))
+      (is (= {} (:data m)))))
+
   (testing "with 1 argument"
     (testing "with string argument"
       (let [e (fail "oops")
@@ -51,7 +58,6 @@
       (let [m (-> (fail "oops" {:a 1}) Throwable->map)]
         (is (= "oops" (:cause m)))
         (is (= {:a 1} (:data m)))))
-
     (testing "with 2nd non-map argument"
       (let [m (-> (fail "oops" 1) Throwable->map)]
         (is (= "oops" (:cause m)))
