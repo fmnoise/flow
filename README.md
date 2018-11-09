@@ -123,7 +123,7 @@ Having in mind that `then` will catch exceptions and return them immediately, th
                         (calculate-result object))))))
 
 ```
-`(throw (fail ...))` in this example may be replaced with **fail!**- a function which accepts the same arguments as `fail` and throws constructed exception.
+`(throw (fail ...))` in this example may be replaced with **fail!** which accepts the same arguments as `fail` and throws constructed exception.
 Another case where early return may be useful is `let`:
 ```clojure
 (defn assign-manager [report-id manager-id]
