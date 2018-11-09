@@ -68,18 +68,18 @@
   ([msg data] (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause] (ex-info msg data cause)))
 
-(defn fail-cause
-  "Returns fail cause"
+(defn ^{:deprecated "0.5.0"} fail-cause
+  "Returns fail cause(message). Deprecated due to ambiguous name"
   [fail]
   (-> fail Throwable->map :cause))
 
-(defn fail-data
-  "Returns fail data"
+(defn ^{:deprecated "0.5.0"} fail-data
+  "Returns fail data. Deprecated, use ex-data instead"
   [fail]
-  (-> fail Throwable->map :data))
+  (ex-data fail))
 
-(defn fail-trace
-  "Returns fail trace"
+(defn ^{:deprecated "0.5.0"} fail-trace
+  "Returns fail trace. Deprecated"
   [fail]
   (-> fail Throwable->map :trace))
 
