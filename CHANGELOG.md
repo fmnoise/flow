@@ -2,6 +2,7 @@
 
 * **BREAKING!** `fail-data`, `fail-cause` and `fail-trace` removed
 * **BREAKING!** `ignored?` now accepts instance of `Throwable` instead of class
+* **BREAKING!** `*exception-base-class*` is now `*catch-from*`
 
 ## 0.5.0
 
