@@ -63,7 +63,7 @@ Hmm, that haven't made it better. Adding threading macro (for readability) adds 
 ```
 Ok, don't panic, let's add some flow:
 ```clojure
-(require '[dawcs.flow :refer [then else fail fail-data]])
+(require '[dawcs.flow :refer [then else fail]])
 
 (defn handler [{:keys [id user params]} db]
   (->> (or user (fail {:error "Login required" :code 401}))
@@ -71,7 +71,7 @@ Ok, don't panic, let's add some flow:
        (then (fn [_] (or (get db id) (fail {:error "Entity not found" :code 404}))))
        (then (fn [_] (or (accessible? db id user) (fail {:error "User cannot update entity" :code 403}))))
        (then (fn [_] (update! db id params)))
-       (else fail-data)))
+       (else ex-data)))
 ```
 
 ### Basic blocks
@@ -89,8 +89,6 @@ Let's see what's going on here:
      (else-if ArithmeticException (constantly :bad-math))
      (else-if Throwable (constantly :unknown-error))) ;; this is also bypassed cause previous function will return normal value
 ```
-
-**fail-data** is also small helper for extracting data passed to `ex-info`. There are also **fail-cause** and **fail-trace** for extracting `ex-info` message and stacktrace respectively.
 
 Ok, that looks simple and easy, but what if `update!` or any other function will throw exception instead of returning `fail`?
 `then` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain.
