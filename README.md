@@ -173,6 +173,15 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 (ignoring #{clojure.lang.ArityException} (call fail))
 ```
 
+## Status
+
+API is considered stable since version `1.0.0`
+
+## Hammock
+
+* ClojureScript support
+* Allow to use custom container for `fail` to improve performance (creating stacktrace is costly)
+
 ## Who’s using Flow?
 
 - [Eventum](https://eventum.no) - connects event organizers with their dream venue
