@@ -78,7 +78,7 @@ Ok, don't panic, let's add some flow:
 
 Let's see what's going on here:
 
-**fail** is just a small wrapper around Clojure's core `ex-info` which allows to call it with single argument. There's also `fail?` helper which checks if given value is an instance of `Throwable`.
+**fail** is a small wrapper around `clojure.core/ex-info` which allows to call it with zero or single argument.
 
 **then** accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance.
 
@@ -123,31 +123,33 @@ Having in mind that `then` will catch exceptions and return them immediately, th
                         (calculate-result object))))))
 
 ```
-
-Another example where early return may be useful is `let`:
+`(throw (fail ...))` in this example may be replaced with **fail!**- a function which accepts the same arguments as `fail` and throws constructed exception.
+Another case where early return may be useful is `let`:
 ```clojure
-(defn assign-manager [db report-id manager-id]
+(defn assign-manager [report-id manager-id]
   (->> (call
          (fn []
-           (let [report (->> (call db-find db report-id) (else #(throw %)))
-                 manager (->> (call db-find db manager-id) (else #(throw %)))]
+           (let [report (or (db-find report-id) (fail! "Report not found"))
+                 manager (or (db-find manager-id) (fail! "Manager not found"))]
              {:manager manager :report report})))
-       (then #(store-to-db %))
+       (then db-persist))
        (else log-error)))
 ```
-Wrapping function to `call` and throwing inside `let` in order to achieve early return in case of failure may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
+Wrapping function to `call` and throwing inside `let` in order to achieve early return may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
 (flet [a 1 b (fail "oops")] (+ a b)) ;; => #error { :cause "oops" ... }
 (flet [a 1 b 2] (fail "oops")) ;; => #error { :cause "oops" ... }
 (flet [a 1 b (throw (Exception. "boom"))] (+ a b)) ;; => #error { :cause "boom" ... }
 (flet [a 1 b 2] (throw (Exception. "boom"))) ;; => #error { :cause "boom" ... }
-
-(defn assign-manager [db report-id manager-id]
-  (->> (flet [report (call db-find db report-id)
-              manager (call db-find db manager-id)]
+```
+So previous example can be simplified:
+```clojure
+(defn assign-manager [report-id manager-id]
+  (->> (flet [report (or (db-find report-id) (fail "Report not found"))
+              manager (or (db-find manager-id) (fail "Manager not found"))]
          {:manager manager :report report})
-       (then #(store-to-db %))
+       (then db-persist)
        (else log-error)))
 ```
 
@@ -176,11 +178,6 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 ## Status
 
 API is considered stable since version `1.0.0`. See changelog for the list of breaking changes.
-
-## Hammock
-
-* ClojureScript support
-* Allow to use custom container for `fail` to improve performance (creating stacktrace is costly)
 
 ## Who’s using Flow?
 
