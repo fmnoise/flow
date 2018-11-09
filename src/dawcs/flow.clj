@@ -73,10 +73,10 @@
      (ex-info msg-or-data {})
      (fail nil msg-or-data)))
   ([msg data]
-   {:pre [(string? msg)]}
+   {:pre [(or (nil? msg) (string? msg))]}
    (ex-info msg (if (map? data) data {::data data})))
   ([msg data cause]
-   {:pre [(string? msg) (instance? Throwable cause)]}
+   {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
    (ex-info msg (if (map? data) data {::data data}) cause)))
 
 (defn fail!
