@@ -3,11 +3,11 @@
 ;; vars
 
 (def ^:dynamic *catch-from*
-  "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`"
+  "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`. Use `catch-from!` or `catching` to modify"
   java.lang.Throwable)
 
 (def ^:dynamic *ignored-exceptions*
-  "Exception classes which will be ignored by `call`. Dynamic, defaults to empty set"
+  "Exception classes which will be ignored by `call`. Dynamic, defaults to empty set. Use `ignore-exceptions!`, `add-ignored-exceptions!` or `ignoring` to modify"
   #{})
 
 ;; setup
