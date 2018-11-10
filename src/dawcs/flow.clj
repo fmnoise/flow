@@ -13,7 +13,7 @@
 ;; setup
 
 (defn ignore-exceptions!
-  "Sets `*ignored-exceptions*` to given set"
+  "Sets `*ignored-exceptions*` to given set of classes"
   [ex-class-set]
   {:pre [(set? ex-class-set)]}
   (alter-var-root #'*ignored-exceptions* (constantly ex-class-set)))
