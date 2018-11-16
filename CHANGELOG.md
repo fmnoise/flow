@@ -1,6 +1,7 @@
 ## 1.0.0
 
-* **BREAKING!** `fail-data`, `fail-cause` and `fail-trace` removed
+* Added `fail!` - fail throwing shortcut
+* **BREAKING!** Removed `fail-data`, `fail-cause` and `fail-trace`
 * **BREAKING!** `ignored?` now accepts instance of `Throwable` instead of class
 * **BREAKING!** `*exception-base-class*` is now `*catch-from*`
 
