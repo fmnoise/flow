@@ -84,6 +84,17 @@
   [& args]
   (throw (apply fail args)))
 
+(defn fail-with
+  "Constructs `ExceptionInfo` with given options"
+  [{:keys [msg data cause] :or {data {}} :as options}]
+  {:pre [(or (nil? options) (map? options))]}
+  (ex-info msg data cause))
+
+(defn fail-with!
+  "Constructs `ExceptionInfo` with given options and throws it"
+  [options]
+  (throw (fail-with options)))
+
 ;; pipeline
 
 (defn call
