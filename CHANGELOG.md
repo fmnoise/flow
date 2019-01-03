@@ -1,3 +1,7 @@
+## next
+
+* Added `fail-with` and `fail-with!` - map-oriented ExceptionInfo construction helpers
+
 ## 1.0.0
 
 * Added `fail!` - fail throwing shortcut
