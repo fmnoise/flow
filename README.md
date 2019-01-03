@@ -172,7 +172,7 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 (add-ignored-exceptions! #{NullPointerException})
 
 ;; dynamically define for a block of code
-(ignoring #{clojure.lang.ArityException} (call fail))
+(ignoring #{clojure.lang.ArityException} (call inc))
 ```
 
 ## Status
