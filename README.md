@@ -19,49 +19,7 @@ Consider trivial example:
       {:error "Missing entity id" :code 400})
     {:error "Login required" :code 401}))
 ```
-Looks ugly enough? How about extracting each check to function?
-
-```clojure
-(defn check-login [req next]
-  (if (:user req)
-    next
-    {:error "Login required"  :code 401}))
-
-(defn check-id [req next]
-  (if (:id req)
-    next
-    {:error "Missing entity id" :code 400}))
-
-(defn check-entity [req db next]
-  (if (get db (:id req))
-    next
-    {:error "Entity not found" :code 404}))
-
-(defn check-access [req db next]
-  (if (accessible? db (:id req) (:user req))
-    next
-    {:error "Access denied" :code 403}))
-
-(defn update-entity [req db]
-  (update! db (:id req) (:params req)))
-
-(defn handler [req db]
-  (check-login
-   req
-   (check-id req
-             (check-entity req db
-                           (check-access req db (update-entity db req))))))
-```
-Hmm, that haven't made it better. Adding threading macro (for readability) adds obscurity instead due to reversed order:
-```clojure
-(defn handler [req db]
-  (->> (update-entity req db)
-       (check-access req db)
-       (check-entity req db)
-       (check-id req)
-       (check-login req)))
-```
-Ok, don't panic, let's add some flow:
+Looks ugly enough? Don't panic, let's add some flow:
 ```clojure
 (require '[dawcs.flow :refer [then else fail]])
 
