@@ -1,4 +1,5 @@
-(ns dawcs.flow)
+(ns dawcs.flow
+  (:import [dawcs.flow Fail]))
 
 ;; vars
 
@@ -66,7 +67,9 @@
 ;; construction
 
 (defn fail
-  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil)"
+  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
+  Deprecated, use ex-info instead"
+  {:deprecated "1.1"}
   ([] (ex-info nil {}))
   ([msg-or-data]
    (if (string? msg-or-data)
@@ -80,20 +83,24 @@
    (ex-info msg (if (map? data) data {::data data}) cause)))
 
 (defn fail!
-  "Constructs `fail` with given args and throws it"
+  "Constructs `fail` with given args and throws it.
+  Deprecated, use ex-info with throw instead"
+  {:deprecated "1.1"}
   [& args]
   (throw (apply fail args)))
 
 (defn fail-with
-  "Constructs `ExceptionInfo` with given options"
-  [{:keys [msg data cause] :or {data {}} :as options}]
+  "Constructs `Fail` with given options. Stacktrace is disabled by default"
+  {:added "1.1"}
+  [{:keys [msg data cause suppress? trace?] :or {data {} suppress? false trace? false} :as options}]
   {:pre [(or (nil? options) (map? options))]}
-  (ex-info msg data cause))
+  (Fail. msg data cause suppress? trace?))
 
 (defn fail-with!
-  "Constructs `ExceptionInfo` with given options and throws it"
-  [options]
-  (throw (fail-with options)))
+  "Constructs `Fail` with given options and throws it. Stacktrace is enabled by default."
+  {:added "1.1"}
+  [{:keys [trace?] :or {trace? true} :as options}]
+  (throw (fail-with (assoc options :trace? trace?))))
 
 ;; pipeline
 
