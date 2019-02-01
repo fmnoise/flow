@@ -66,29 +66,6 @@
 
 ;; construction
 
-(defn fail
-  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
-  Deprecated, use ex-info instead"
-  {:deprecated "1.1"}
-  ([] (ex-info nil {}))
-  ([msg-or-data]
-   (if (string? msg-or-data)
-     (ex-info msg-or-data {})
-     (fail nil msg-or-data)))
-  ([msg data]
-   {:pre [(or (nil? msg) (string? msg))]}
-   (ex-info msg (if (map? data) data {::data data})))
-  ([msg data cause]
-   {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
-   (ex-info msg (if (map? data) data {::data data}) cause)))
-
-(defn fail!
-  "Constructs `fail` with given args and throws it.
-  Deprecated, use ex-info with throw instead"
-  {:deprecated "1.1"}
-  [& args]
-  (throw (apply fail args)))
-
 (defn fail-with
   "Constructs `Fail` with given options. Stacktrace is disabled by default"
   {:added "1.1"}
@@ -150,3 +127,28 @@
   {:style/indent 1}
   [bindings & body]
   `(flet* ~(partition 2 bindings) ~@body))
+
+;; legacy construction
+
+(defn fail
+  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
+  Deprecated, use ex-info instead"
+  {:deprecated "1.1"}
+  ([] (ex-info nil {}))
+  ([msg-or-data]
+   (if (string? msg-or-data)
+     (ex-info msg-or-data {})
+     (fail nil msg-or-data)))
+  ([msg data]
+   {:pre [(or (nil? msg) (string? msg))]}
+   (ex-info msg (if (map? data) data {::data data})))
+  ([msg data cause]
+   {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
+   (ex-info msg (if (map? data) data {::data data}) cause)))
+
+(defn fail!
+  "Constructs `fail` with given args and throws it.
+  Deprecated, use ex-info with throw instead"
+  {:deprecated "1.1"}
+  [& args]
+  (throw (apply fail args)))
