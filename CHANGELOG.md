@@ -1,6 +1,8 @@
-## next
+## 1.1.0
 
-* Added `fail-with` and `fail-with!` - map-oriented ExceptionInfo construction helpers
+* Added custom container for failure representation with ability to skip stacktrace
+* Added `fail-with` and `fail-with!` - map-oriented Fail construction helpers
+* Mark `fail` and `fail!` deprecated
 
 ## 1.0.0
 
