@@ -1,4 +1,4 @@
-(defproject dawcs/flow "1.0.0"
+(defproject dawcs/flow "1.1.0-SNAPSHOT"
   :description "Functional style of errors handling (without monads)"
   :url "https://github.com/dawcs/flow"
   :license {:name "Eclipse Public License"
