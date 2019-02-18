@@ -2,6 +2,7 @@
 
 * Added custom container for failure representation with ability to skip stacktrace
 * Added `fail-with` and `fail-with!` - map-oriented Fail construction helpers
+* Added `choice` - macros inspired by `or` which treats fails as falsy values
 * Mark `fail` and `fail!` deprecated
 
 ## 1.0.0
