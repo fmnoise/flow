@@ -8,35 +8,61 @@
 
 Consider trivial example:
 ```clojure
-(defn handler [req db]
+(defn update-handler [req db]
   (if-let [user (:user req)]
     (if-let [id (:id req)]
-      (if (get db id)
-        (if (accessible? db id user)
-          (update! db id (:params req))
+      (if-let [entity (fetch-entity db id)]
+        (if (accessible? entity user)
+          (update-entity! entity (:params req))
           {:error "Access denied" :code 403})
         {:error "Entity not found" :code 404})
       {:error "Missing entity id" :code 400})
     {:error "Login required" :code 401}))
 ```
-Looks ugly enough? Don't panic, let's add some flow:
+Looks ugly enough? Let's add some flow:
 ```clojure
-(require '[dawcs.flow :refer [then else fail]])
+(require '[dawcs.flow :refer [then else]])
+```
+First, let's extract each check to function to make code more clear and testable:
+```clojure
+(defn check-user [req]
+  (or (:user req)
+    (ex-info "Login requred" {:code 401})))
 
-(defn handler [{:keys [id user params]} db]
-  (->> (or user (fail {:error "Login required" :code 401}))
-       (then (fn [_] (or id (fail {:error "Missing entity id" :code 400}))))
-       (then (fn [_] (or (get db id) (fail {:error "Entity not found" :code 404}))))
-       (then (fn [_] (or (accessible? db id user) (fail {:error "User cannot update entity" :code 403}))))
-       (then (fn [_] (update! db id params)))
-       (else ex-data)))
+(defn check-entity-id [req]
+  (or (:id req)
+    (ex-info "Missing entity id" {:code 400})))
+
+(defn check-entity-exists [db id]
+  (or (fetch-entity db id)
+    (ex-info "Entity not found" {:code 404})))
+
+(defn check-entity-access [entity user]
+  (if (accessible? entity user)
+    entity
+    (ex-info "Access denied" {:code 403})))
+```
+
+Then, let's add formatting error from ex-info
+```clojure
+(defn format-error [err]
+  (assoc (ex-data err) :error (.getMessage err)))
+```
+
+And finally we can write pretty readable pipeline
+```clojure
+(defn update-handler [req db]
+  (->> (check-user req)
+       (then (fn [_] (check-entity-id req))
+       (then #(check-entity-exists db %))
+       (then #(check-entity-access % (:user req))
+       (then #(update-entity! % (:params req))))
+       (else format-error)))
 ```
 
 ### Basic blocks
 
 Let's see what's going on here:
-
-**fail** is a small wrapper around `clojure.core/ex-info` which allows to call it with zero or single argument.
 
 **then** accepts value and a function, if value is not an exception instance, it calls function on it, returning result, otherwise it returns given exception instance.
 
@@ -48,7 +74,7 @@ Let's see what's going on here:
      (else-if Throwable (constantly :unknown-error))) ;; this is also bypassed cause previous function will return normal value
 ```
 
-Ok, that looks simple and easy, but what if `update!` or any other function will throw exception instead of returning `fail`?
+Ok, that looks simple and easy, but what if `update-entity!` or any other function will throw exception instead of returning exception instance?
 `then` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain.
 If we need to start a chain with something which can throw an exception, we should use **call** instead of `then`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
 ```clojure
@@ -71,41 +97,40 @@ And a small cheatsheet to summarize on basic blocks:
 
 ### Early return
 
-Having in mind that `then` will catch exceptions and return them immediately, throwing `fail` may be used as replacement for `return`:
+Having in mind that `then` will catch exceptions and return them immediately, throwing exception may be used as replacement for `return`:
 ```clojure
 (->> (call get-objects)
      (then (partial map
                     (fn [obj]
                       (if (unprocessable? obj)
-                        (throw (fail "Unprocessable object" {:object obj}))
+                        (throw (ex-info "Unprocessable object" {:object obj}))
                         (calculate-result object))))))
 
 ```
-`(throw (fail ...))` in this example may be replaced with **fail!** which accepts the same arguments as `fail` and throws constructed exception.
 Another case where early return may be useful is `let`:
 ```clojure
 (defn assign-manager [report-id manager-id]
   (->> (call
          (fn []
-           (let [report (or (db-find report-id) (fail! "Report not found"))
-                 manager (or (db-find manager-id) (fail! "Manager not found"))]
+           (let [report (or (db-find report-id) (throw (ex-info "Report not found" {:id report-id})))
+                 manager (or (db-find manager-id) (throw (ex-info "Manager not found" {:id manager-id})))]
              {:manager manager :report report})))
        (then db-persist))
        (else log-error)))
 ```
-Wrapping function to `call` and throwing inside `let` in order to achieve early return may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning `fail` during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
+Wrapping function to `call` and throwing inside `let` in order to achieve early return may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning exception instance during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
-(flet [a 1 b (fail "oops")] (+ a b)) ;; => #error { :cause "oops" ... }
-(flet [a 1 b 2] (fail "oops")) ;; => #error { :cause "oops" ... }
+(flet [a 1 b (ex-info "oops" {:reason "something went wrong"})] (+ a b)) ;; => #error { :cause "oops" ... }
+(flet [a 1 b 2] (Exception. "oops")) ;; => #error { :cause "oops" ... }
 (flet [a 1 b (throw (Exception. "boom"))] (+ a b)) ;; => #error { :cause "boom" ... }
 (flet [a 1 b 2] (throw (Exception. "boom"))) ;; => #error { :cause "boom" ... }
 ```
 So previous example can be simplified:
 ```clojure
 (defn assign-manager [report-id manager-id]
-  (->> (flet [report (or (db-find report-id) (fail "Report not found"))
-              manager (or (db-find manager-id) (fail "Manager not found"))]
+  (->> (flet [report (or (db-find report-id) (ex-info "Report not found" {:id report-id}))
+              manager (or (db-find manager-id) (ex-info "Manager not found" {:id manager-id}))]
          {:manager manager :report report})
        (then db-persist)
        (else log-error)))
