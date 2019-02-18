@@ -19,11 +19,11 @@ Consider trivial example:
       {:error "Missing entity id" :code 400})
     {:error "Login required" :code 401}))
 ```
-Looks ugly enough? Let's add some flow:
+Looks ugly enough? Let's add some readability. First, require flow(notice pretty minimal api):
 ```clojure
 (require '[dawcs.flow :refer [then else]])
 ```
-First, let's extract each check to function to make code more clear and testable(notice using `ex-info` as error container with ability to store map with some data in addition to message):
+Then let's extract each check to function to make code more clear and testable(notice using `ex-info` as error container with ability to store map with some data in addition to message):
 ```clojure
 (defn check-user [req]
   (or (:user req)
@@ -42,14 +42,13 @@ First, let's extract each check to function to make code more clear and testable
     entity
     (ex-info "Access denied" {:code 403})))
 ```
-
-Then, let's add error formatting helper to turn ex-info data into desired format:
+Then let's add error formatting helper to turn ex-info data into desired format:
 ```clojure
-(defn format-error [err]
-  (assoc (ex-data err) :error (.getMessage err)))
+(defn format-error [^Throwable err]
+  (assoc (ex-data err)
+         :error (.getMessage err))) ;; ex-message in clojure 1.10 can be used instead
 ```
-
-And finally we can write pretty readable pipeline:
+And finally we can write pretty readable pipeline(notice thread-last macro usage):
 ```clojure
 (defn update-handler [req db]
   (->> (check-user req)
