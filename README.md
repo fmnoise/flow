@@ -23,7 +23,7 @@ Looks ugly enough? Let's add some flow:
 ```clojure
 (require '[dawcs.flow :refer [then else]])
 ```
-First, let's extract each check to function to make code more clear and testable:
+First, let's extract each check to function to make code more clear and testable(notice using `ex-info` as error container with ability to store map with some data in addition to message):
 ```clojure
 (defn check-user [req]
   (or (:user req)
@@ -43,13 +43,13 @@ First, let's extract each check to function to make code more clear and testable
     (ex-info "Access denied" {:code 403})))
 ```
 
-Then, let's add formatting error from ex-info
+Then, let's add error formatting helper to turn ex-info data into desired format:
 ```clojure
 (defn format-error [err]
   (assoc (ex-data err) :error (.getMessage err)))
 ```
 
-And finally we can write pretty readable pipeline
+And finally we can write pretty readable pipeline:
 ```clojure
 (defn update-handler [req db]
   (->> (check-user req)
