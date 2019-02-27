@@ -157,7 +157,7 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 (ignoring #{clojure.lang.ArityException} (call inc))
 ```
 
-## Why is it better than Either?
+## How it's different from Either?
 
 The core idea of `flow` is clear separation of normal value(everything which is not exception instance) and value which indicates error(exception instance) without involving additional containers. This allows to get rid of redundant abstractions like `Either`, and also prevents mess with value containers (if you've ever seen `Either.Left` inside `Either.Right` you probably know what I'm talking about). Exceptions are already first-class citizens in Java world but are usually combined with side-effect (throwing) for propagation purposes, while `flow` actively promotes more functional usage of it with returning exception instance:
 ```clojure
