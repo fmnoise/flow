@@ -112,15 +112,6 @@
   {:pre [(isa? ex-class Throwable)]}
   (if (isa? (class value) ex-class) (handler value) value))
 
-(defmacro opt
-  "Works same as `or` but treats fails as falsy values. If only fails supplied, returns last one"
-  {:added "1.1"}
-  ([] nil)
-  ([x] x)
-  ([x & xs]
-   `(let [res# ~x]
-      (if-not (fail? res#) res# (opt ~@xs)))))
-
 ;; flet
 
 (defmacro ^:no-doc flet*
