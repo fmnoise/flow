@@ -142,7 +142,7 @@ So previous example can be simplified:
 ;; global override
 (catch-from! java.lang.Exception)
 
-;; dynamically define for a block of code
+;; dynamically define for a block of code (be aware of multi-threaded code)
 (catching java.lang.Exception (call / 1 0))
 ```
 Some exceptions (like `clojure.lang.ArityException`) signal about bad code or typo and throwing them helps to find it as early as possible, while catching may lead to obscurity and hidden problems. In order to prevent catching them by `call`, certain exception classes may be added to ignored exceptions list:
@@ -153,7 +153,7 @@ Some exceptions (like `clojure.lang.ArityException`) signal about bad code or ty
 ;; add without overwriting previous values
 (add-ignored-exceptions! #{NullPointerException})
 
-;; dynamically define for a block of code
+;; dynamically define for a block of code (be aware of multi-threaded code)
 (ignoring #{clojure.lang.ArityException} (call inc))
 ```
 
