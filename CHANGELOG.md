@@ -2,6 +2,7 @@
 
 * Added custom container for failure representation with ability to skip stacktrace
 * Added `fail-with` and `fail-with!` - map-oriented Fail construction helpers
+* Added `*default-handler*` and `call-with` for more fine-tuning of exception handling
 * Mark `fail` and `fail!` deprecated
 
 ## 1.0.0
