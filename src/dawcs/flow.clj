@@ -81,14 +81,25 @@
 
 ;; pipeline
 
-(defn call
-  "Calls given function with supplied args in `try/catch` block. When caught an exception
+(def ^:dynamic *default-handler*
+  "Default handler for processing caught exceptions. When caught an exception
    which class is `*catch-from*` or a subclass of it, and is not listed in `*ignored-exceptions*`(and is not a subclass of any classes listed there)
-   returns instance of caught exception, otherwise throws it. If no exception has caught during function call returns its result"
+   returns instance of caught exception, otherwise throws it"
+  (fn [t] (if (ignored? t) (throw t) t)))
+
+(defn call
+  "Calls given function with supplied args in `try/catch` block, then calls default-handler on caught exception. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
-      (if (ignored? t) (throw t) t))))
+      (*default-handler* t))))
+
+(defn call-with
+  "Calls given function with supplied args in `try/catch` block, then calls handler on caught exception. If no exception has caught during function call returns its result"
+  [handler f & args]
+  (try (apply f args)
+    (catch java.lang.Throwable t
+      (handler t))))
 
 (defn then
   "If value is not a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"
