@@ -88,7 +88,7 @@
   (fn [t] (if (ignored? t) (throw t) t)))
 
 (defn call
-  "Calls given function with supplied args in `try/catch` block, then calls default-handler on caught exception. If no exception has caught during function call returns its result"
+  "Calls given function with supplied args in `try/catch` block, then calls `*default-handler*` on caught exception. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
