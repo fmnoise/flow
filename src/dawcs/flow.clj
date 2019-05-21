@@ -147,7 +147,7 @@
     `(->> (call (fn [] ~expression))
           (then (fn [~bind-name]
                   (flet* ~(rest bindings) ~@body))))
-    `(do ~@body)))
+    `(call (fn [] ~@body))))
 
 (defmacro flet
   "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call`. If `fail?` value returned from binding evaluation, it's returned immediately and all other bindings and body are skipped"
