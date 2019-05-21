@@ -102,26 +102,42 @@
       (handler t))))
 
 (defn then
-  "If value is not a `fail?`, applies handler to it wrapped to `call`, otherwise returns value"
-  [handler value]
-  (if (fail? value) value (call handler value)))
+  "If value is not a `fail?`, applies f to it, otherwise returns value"
+  [f value]
+  (if (fail? value) value (f value)))
+
+(defn then-call
+  "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
+  [f value]
+  (if (fail? value) value (call f value)))
 
 (defn else
-  "If value is a `fail?`, calls handler on it, otherwise returns value"
-  [handler value]
-  (if (fail? value) (handler value) value))
+  "If value is a `fail?`, calls applies f to it, otherwise returns value"
+  [f value]
+  (if (fail? value) (f value) value))
+
+(defn else-call
+  "If value is a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
+  [f value]
+  (if (fail? value) (call f value) value))
 
 (defn thru
-  "Calls handler on value (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
-  [handler value]
-  (handler value)
+  "Applies f to value (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
+  [f value]
+  (f value)
+  value)
+
+(defn thru-call
+  "Applies f to value wrapped to call (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
+  [f value]
+  (call f value)
   value)
 
 (defn else-if
-  "If value is an exception of ex-class, applies handler to it, otherwise returns value"
-  [ex-class handler value]
+  "If value is an exception of ex-class, applies f to it, otherwise returns value"
+  [ex-class f value]
   {:pre [(isa? ex-class Throwable)]}
-  (if (isa? (class value) ex-class) (handler value) value))
+  (if (isa? (class value) ex-class) (f value) value))
 
 ;; flet
 
