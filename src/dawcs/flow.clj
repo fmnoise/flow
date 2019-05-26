@@ -34,15 +34,19 @@
 ;; dynamic wrappers
 
 (defmacro catching
-  "Executes body with `*exception-base-class*` bound to given class"
-  {:style/indent 1}
+  "Executes body with `*exception-base-class*` bound to given class.
+  Deprecated due to possible problems with multi-threaded code. Use `call-with` to achieve same behavior with thread-safety"
+  {:style/indent 1
+   :deprecated "2.0"}
   [exception-base-class & body]
   `(binding [*catch-from* ~exception-base-class]
      ~@body))
 
 (defmacro ignoring
-  "Executes body with `*ignored-exceptions*` bound to given value"
-  {:style/indent 1}
+  "Executes body with `*ignored-exceptions*` bound to given value.
+  Deprecated due to possible problems with multi-threaded code. Use `call-with` to achieve same behavior with thread-safety"
+  {:style/indent 1
+   :deprecated "2.0"}
   [ignored-exceptions & body]
   `(binding [*ignored-exceptions* ~ignored-exceptions]
      ~@body))
