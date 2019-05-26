@@ -68,14 +68,14 @@
 
 (defn fail-with
   "Constructs `Fail` with given options. Stacktrace is disabled by default"
-  {:added "1.1"}
+  {:added "2.0"}
   [{:keys [msg data cause suppress? trace?] :or {data {} suppress? false trace? false} :as options}]
   {:pre [(or (nil? options) (map? options))]}
   (Fail. msg data cause suppress? trace?))
 
 (defn fail-with!
   "Constructs `Fail` with given options and throws it. Stacktrace is enabled by default."
-  {:added "1.1"}
+  {:added "2.0"}
   [{:keys [trace?] :or {trace? true} :as options}]
   (throw (fail-with (assoc options :trace? trace?))))
 
@@ -96,6 +96,7 @@
 
 (defn call-with
   "Calls given function with supplied args in `try/catch` block, then calls handler on caught exception. If no exception has caught during function call returns its result"
+  {:added "2.0"}
   [handler f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
@@ -108,6 +109,7 @@
 
 (defn then-call
   "If value is not a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
+  {:added "2.0"}
   [f value]
   (if (fail? value) value (call f value)))
 
@@ -118,6 +120,7 @@
 
 (defn else-call
   "If value is a `fail?`, applies f to it wrapped to `call`, otherwise returns value"
+  {:added "2.0"}
   [f value]
   (if (fail? value) (call f value) value))
 
@@ -160,7 +163,7 @@
 (defn fail
   "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
   Deprecated, use ex-info instead"
-  {:deprecated "1.1"}
+  {:deprecated "2.0"}
   ([] (ex-info nil {}))
   ([msg-or-data]
    (if (string? msg-or-data)
@@ -176,6 +179,6 @@
 (defn fail!
   "Constructs `fail` with given args and throws it.
   Deprecated, use ex-info with throw instead"
-  {:deprecated "1.1"}
+  {:deprecated "2.0"}
   [& args]
   (throw (apply fail args)))
