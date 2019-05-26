@@ -208,6 +208,25 @@ The core idea of `flow` is clear separation of normal value(everything which is 
 ```
 In both examples above we clearly understand that returned value is an error, so there's no need to wrap it to any other container like `Either`(also, Clojure's core function `ex-info` is perfect tool for storing additional data in exception instance and it's already available from the box). That means no or minimal rework of existing code in order to get started with `flow`, while `Either` would need wrapping both normal and error values into its corresponding `Right` and `Left` containers. Due to described features `flow` is much easier to introduce into existing project than `Either`.
 
+### But isn't using exceptions costly?
+
+In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of flow - using exception instance as error value. But we know that constructing exception is costly as it fills the stacktrace, but we may not use it.  Java 7 has a possibility to omit stacktrace creation, but that change to ExceptionInfo was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
+```clojure
+(fail-with {:msg "User not found" :data {:id 1}}) ;; => #error {:cause "User not found" :data {:id 1} :via [...] :trace []}
+
+;; it behaves the same as ExceptionInfo
+(ex-data *1) ;; => {:id 1}
+
+;; map may be empty or nil
+(fail-with nil) ;; => #error {:cause nil :data {} :via [...] :trace []}
+
+;; stacktrace is disabled by default but can be turned on
+(fail-with {:msg "User not found" :data {:id 1} :trace? true})
+
+;; there's also throwing constuctor (stacktrace is enabled by default)
+(fail-with! {:msg "User not found" :data {:id 1}})
+```
+
 ## Status
 
 API is considered stable since version `1.0.0`. See changelog for the list of breaking changes.
