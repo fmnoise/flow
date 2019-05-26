@@ -201,7 +201,27 @@
     (is (f/fail? (f/flet [x (+ 1 2), y (/ x 0)] y))))
 
   (testing "with exception in body"
-    (is (f/fail? (f/flet [x (+ 1 2), y 0] (/ x y))))))
+    (is (f/fail? (f/flet [x (+ 1 2), y 0] (/ x y)))))
+
+  (testing "with custom handler"
+    (let [handler #(throw %)]
+      (testing "with no exception"
+        (is (= 6 (f/flet [:handler handler
+                          x (+ 1 2)
+                          y (+ x 3)]
+                   y))))
+
+      (testing "with exception in bindings"
+        (is (thrown? ArithmeticException (f/flet [:handler handler
+                                                  x (+ 1 2)
+                                                  y (/ x 0)]
+                                           y))))
+
+      (testing "with exception in body"
+        (is (thrown? ArithmeticException (f/flet [:handler handler
+                                                  x (+ 1 2)
+                                                  y 0]
+                                           (/ x y))))))))
 
 (deftest base-exception-class--test
   (let [f (fn [& _] (throw (Throwable. "oops")))]

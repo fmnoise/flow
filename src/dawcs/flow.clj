@@ -145,18 +145,21 @@
 ;; flet
 
 (defmacro ^:no-doc flet*
-  [bindings & body]
+  [handler bindings & body]
   (if-let [[bind-name expression] (first bindings)]
-    `(->> (call (fn [] ~expression))
+    `(->> (call-with ~handler (fn [] ~expression))
           (then (fn [~bind-name]
-                  (flet* ~(rest bindings) ~@body))))
-    `(call (fn [] ~@body))))
+                  (flet* ~handler ~(rest bindings) ~@body))))
+    `(call-with ~handler (fn [] ~@body))))
 
 (defmacro flet
-  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call`. If `fail?` value returned from binding evaluation, it's returned immediately and all other bindings and body are skipped"
+  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with `*default-handler*`. If `fail?` value returned from binding evaluation, it's returned immediately and all other bindings and body are skipped. May use custom exception handler passed as first binding with name :handler"
   {:style/indent 1}
   [bindings & body]
-  `(flet* ~(partition 2 bindings) ~@body))
+  (let [handler-given? (= (first bindings) :handler)
+        handler (if handler-given? (second bindings) *default-handler*)
+        bindings (if handler-given? (rest (rest bindings)) bindings)]
+    `(flet* ~handler ~(partition 2 bindings) ~@body)))
 
 ;; legacy construction
 
