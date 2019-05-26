@@ -73,19 +73,18 @@ Let's see what's going on here:
      (else-if Throwable (constantly :unknown-error))) ;; this is also bypassed cause previous function will return normal value
 ```
 
-Ok, that looks simple and easy, but what if `update-entity!` or any other function will throw exception instead of returning exception instance?
-`call` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
+**call** is functional `try/catch` replacement designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
 ```clojure
 (->> (call / 1 0) (then inc)) ;; => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (then inc)) ;; => 1
 ```
 
-Using `call` inside `then` may look ugly:
+Using `call` inside `then` may look verbose:
 ```clojure
 (->> (rand-int 10) ;; some calculation which may return 0
      (then (fn [v] (call #(/ 10 v))) ;; can cause "Divide by zero" so should be inside call
 ```
-so there's `then-call` for it
+so there's **then-call** for it (and **else-call** also exists for consistency)
 ```clojure
 (->> (rand-int 10)
      (then-call #(/ 10 %)))
@@ -106,14 +105,14 @@ And a small cheatsheet to summarize on basic blocks:
 
 ### Early return
 
-Having in mind that `then` will catch exceptions and return them immediately, throwing exception may be used as replacement for `return`:
+Having in mind that `call` will catch exceptions and return them immediately, throwing exception may be used as replacement for `return`:
 ```clojure
 (->> (call get-objects)
-     (then (partial map
-                    (fn [obj]
-                      (if (unprocessable? obj)
-                        (throw (ex-info "Unprocessable object" {:object obj}))
-                        (calculate-result object))))))
+     (then-call (partial map
+                  (fn [obj]
+                    (if (unprocessable? obj)
+                      (throw (ex-info "Unprocessable object" {:object obj}))
+                      (calculate-result object))))))
 
 ```
 Another case where early return may be useful is `let`:
@@ -149,22 +148,52 @@ So previous example can be simplified:
 
 `call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
 ```clojure
-;; global override
 (catch-from! java.lang.Exception)
-
-;; dynamically define for a block of code (be aware of multi-threaded code)
-(catching java.lang.Exception (call / 1 0))
 ```
 Some exceptions (like `clojure.lang.ArityException`) signal about bad code or typo and throwing them helps to find it as early as possible, while catching may lead to obscurity and hidden problems. In order to prevent catching them by `call`, certain exception classes may be added to ignored exceptions list:
 ```clojure
-;; global override
 (ignore-exceptions! #{IllegalArgumentException ClassCastException})
 
 ;; add without overwriting previous values
 (add-ignored-exceptions! #{NullPointerException})
+```
+These methods are using mutation of dynamic variables and can be used during system startup to perform global change, but if you need to change behavior in certain block of code(or you simply want more functional approach without involving global mutable state) there's **call-with** which works similar to `call` but its first argument is handler - function which is called on caught exception:
+```clojure
+(defn handler [e]
+  (if (instance? clojure.lang.ArityException) (throw e) e))
 
-;; dynamically define for a block of code (be aware of multi-threaded code)
-(ignoring #{clojure.lang.ArityException} (call inc))
+(call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
+```
+Using multimethods/protocols we can achieve full power of fine-tuning what to catch and return as exception instance and what to throw:
+```clojure
+(defprotocol ErrorHandling
+  (handle [e]))
+
+;; let's say we want to catch everything starting from Exception but throw NullPointerException
+(extend-protocol ErrorHandling
+  Throwable
+  (handle [e] (throw e))
+  Exception
+  (handle [e] e)
+  NullPointerException
+  (handle [e] (throw e)))
+
+(call-with handle + 1 nil) ;; throws NullPointerException
+```
+
+Custom handler may be also passed to `flet` in first pair of binding vector:
+```clojure
+;; this flet works the same as let if exception occured
+(flet [:handler #(throw %)
+       a 1
+       b (/ a 0)]
+  (+ a b)) ;; throws ArithmeticException
+
+;; but it can do early return if exception is returned as value
+(flet [:handler #(throw %)
+       a 1
+       b (ex-info "Something went wrong" {:because "Monday"})]
+  (/ a b)) ;; => #error {:cause "Something went wrong" :data {:because "Monday"} ... }
 ```
 
 ## How it's different from Either?
@@ -174,7 +203,7 @@ The core idea of `flow` is clear separation of normal value(everything which is 
 ;; construction
 (ex-info "User not found" {:id 123})
 
-;; catching
+;; catching and returning instance
 (try (/ 1 0) (catch Exception e e))
 ```
 In both examples above we clearly understand that returned value is an error, so there's no need to wrap it to any other container like `Either`(also, Clojure's core function `ex-info` is perfect tool for storing additional data in exception instance and it's already available from the box). That means no or minimal rework of existing code in order to get started with `flow`, while `Either` would need wrapping both normal and error values into its corresponding `Right` and `Left` containers. Due to described features `flow` is much easier to introduce into existing project than `Either`.
@@ -186,6 +215,7 @@ API is considered stable since version `1.0.0`. See changelog for the list of br
 ## Who’s using Flow?
 
 - [Eventum](https://eventum.no) - connects event organizers with their dream venue
+- [Yellowsack](https://yellowsack.com) - dumpster bag & and pick up service
 
 ## Acknowledgements
 
