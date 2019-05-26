@@ -210,7 +210,7 @@ In both examples above we clearly understand that returned value is an error, so
 
 ### But isn't using exceptions costly?
 
-In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of flow - using exception instance as error value. But we know that constructing exception is costly as it fills the stacktrace, but we may not use it.  Java 7 has a possibility to omit stacktrace creation, but that change to ExceptionInfo was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
+In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of flow - using exception instance as error value. But we know that constructing exception is costly due to stacktrace creation. Java 7 has a possibility to omit stacktrace creation, but that change to ExceptionInfo was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
 ```clojure
 (fail-with {:msg "User not found" :data {:id 1}}) ;; => #error {:cause "User not found" :data {:id 1} :via [...] :trace []}
 
