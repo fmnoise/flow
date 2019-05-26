@@ -131,7 +131,7 @@
   value)
 
 (defn thru-call
-  "Applies f to value wrapped to call (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
+  "Applies f to value wrapped to call (for side effects). Returns value. Works similar to doto, but accepts function as first arg. Please not that exception thrown inside of function will be silently ignored by default"
   [f value]
   (call f value)
   value)
@@ -162,7 +162,7 @@
 
 (defn fail
   "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
-  Deprecated, use ex-info instead"
+  Deprecated, use `ex-info` instead"
   {:deprecated "2.0"}
   ([] (ex-info nil {}))
   ([msg-or-data]
@@ -178,7 +178,7 @@
 
 (defn fail!
   "Constructs `fail` with given args and throws it.
-  Deprecated, use ex-info with throw instead"
+  Deprecated, use `ex-info` with `throw` instead"
   {:deprecated "2.0"}
   [& args]
   (throw (apply fail args)))
