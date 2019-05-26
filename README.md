@@ -19,7 +19,7 @@ Consider trivial example:
       {:error "Missing entity id" :code 400})
     {:error "Login required" :code 401}))
 ```
-Looks ugly enough? Let's add some readability. First, require flow(notice pretty minimal api):
+Looks ugly enough? Let's add some readability. First, require flow:
 ```clojure
 (require '[dawcs.flow :refer [then else]])
 ```
@@ -74,11 +74,21 @@ Let's see what's going on here:
 ```
 
 Ok, that looks simple and easy, but what if `update-entity!` or any other function will throw exception instead of returning exception instance?
-`then` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain.
-If we need to start a chain with something which can throw an exception, we should use **call** instead of `then`. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
+`call` is designed to catch all exceptions(starting from `Throwable` but that can be changed, more details soon) and return their instances so any thrown exception will be caught and passed through chain. `call` accepts a function and its arguments, wraps function call to `try/catch` block and returns either caught exception instance or function call result, example:
 ```clojure
 (->> (call / 1 0) (then inc)) ;; => #error {:cause "Divide by zero" :via ...}
 (->> (call / 0 1) (then inc)) ;; => 1
+```
+
+Using `call` inside `then` may look ugly:
+```clojure
+(->> (rand-int 10) ;; some calculation which may return 0
+     (then (fn [v] (call #(/ 10 v))) ;; can cause "Divide by zero" so should be inside call
+```
+so there's `then-call` for it
+```clojure
+(->> (rand-int 10)
+     (then-call #(/ 10 %)))
 ```
 
 If we need to pass both cases (exception instances and normal values) through some function, **thru** is right tool. It works similar to `doto` but accepts function as first argument. It always returns given value, so supplied function is called only for side-effects(like error logging or cleaning up):
@@ -92,7 +102,7 @@ And a small cheatsheet to summarize on basic blocks:
 
 ![cheatsheet](https://raw.githubusercontent.com/dawcs/flow/master/doc/flow.png)
 
-**IMPORTANT!** `then` uses `call` under the hood to catch exception instances. `else` and `thru` don't wrap handler to `call`, so you should do it manually if you need that.
+
 
 ### Early return
 
