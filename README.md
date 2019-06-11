@@ -21,7 +21,7 @@ Consider trivial example:
 ```
 Looks ugly enough? Let's add some readability. First, require flow:
 ```clojure
-(require '[dawcs.flow :refer [then else]])
+(require '[dawcs.flow :as flow :refer [then else]])
 ```
 Then let's extract each check to function to make code more clear and testable(notice using `ex-info` as error container with ability to store map with some data in addition to message):
 ```clojure
@@ -146,31 +146,10 @@ So previous example can be simplified:
 
 ### Tuning exceptions catching
 
-`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed:
+`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed by extending `ErrorHandling` protocol:
 ```clojure
-(catch-from! java.lang.Exception)
-```
-Some exceptions (like `clojure.lang.ArityException`) signal about bad code or typo and throwing them helps to find it as early as possible, while catching may lead to obscurity and hidden problems. In order to prevent catching them by `call`, certain exception classes may be added to ignored exceptions list:
-```clojure
-(ignore-exceptions! #{IllegalArgumentException ClassCastException})
-
-;; add without overwriting previous values
-(add-ignored-exceptions! #{NullPointerException})
-```
-These methods are using mutation of dynamic variables and can be used during system startup to perform global change, but if you need to change behavior in certain block of code(or you simply want more functional approach without involving global mutable state) there's **call-with** which works similar to `call` but its first argument is handler - function which is called on caught exception:
-```clojure
-(defn handler [e]
-  (if (instance? clojure.lang.ArityException) (throw e) e))
-
-(call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
-```
-Using multimethods/protocols we can achieve full power of fine-tuning what to catch and return as exception instance and what to throw:
-```clojure
-(defprotocol ErrorHandling
-  (handle [e]))
-
 ;; let's say we want to catch everything starting from Exception but throw NullPointerException
-(extend-protocol ErrorHandling
+(extend-protocol flow/ErrorHandling
   Throwable
   (handle [e] (throw e))
   Exception
@@ -178,7 +157,14 @@ Using multimethods/protocols we can achieve full power of fine-tuning what to ca
   NullPointerException
   (handle [e] (throw e)))
 
-(call-with handle + 1 nil) ;; throws NullPointerException
+(call + 1 nil) ;; throws NullPointerException
+```
+Example above may be used during system startup to perform global change, but if you need to change behavior in certain block of code there's **call-with** which works similar to `call` but its first argument is handler - function which is called on caught exception:
+```clojure
+(defn handler [e]
+  (if (instance? clojure.lang.ArityException) (throw e) e))
+
+(call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
 ```
 
 Custom handler may be also passed to `flet` in first pair of binding vector:
@@ -229,7 +215,7 @@ In some of examples above exception instance is constructed and passed through c
 
 ## Status
 
-API is considered stable since version `1.0.0`. See changelog for the list of breaking changes.
+Most of API is considered stable since version `1.0.0`, despite setup machinery may be changed in next versions. See changelog for the list of breaking changes.
 
 ## Who’s using Flow?
 
