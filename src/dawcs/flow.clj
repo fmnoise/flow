@@ -1,57 +1,12 @@
 (ns dawcs.flow
   (:import [dawcs.flow Fail]))
 
-;; vars
+(defprotocol ErrorHandling
+  (handle [t]))
 
-(def ^:dynamic *catch-from*
-  "Base exception class which will be caught by `call`. Dynamic, defaults to `Throwable`. Use `catch-from!` or `catching` to modify"
-  java.lang.Throwable)
-
-(def ^:dynamic *ignored-exceptions*
-  "Exception classes which will be ignored by `call`. Dynamic, defaults to empty set. Use `ignore-exceptions!`, `add-ignored-exceptions!` or `ignoring` to modify"
-  #{})
-
-;; setup
-
-(defn ignore-exceptions!
-  "Sets `*ignored-exceptions*` to given set of classes"
-  [ex-class-set]
-  {:pre [(set? ex-class-set)]}
-  (alter-var-root #'*ignored-exceptions* (constantly ex-class-set)))
-
-(defn add-ignored-exceptions!
-  "Adds given set of classes to `*ignored-exceptions*`"
-  [ex-class-set]
-  {:pre [(set? ex-class-set)]}
-  (alter-var-root #'*ignored-exceptions* into ex-class-set))
-
-(defn catch-from!
-  "Sets *exception-base-class* to specified class"
-  [ex-class]
-  {:pre [(isa? ex-class Throwable)]}
-  (alter-var-root #'*catch-from* (constantly ex-class)))
-
-;; dynamic wrappers
-
-(defmacro catching
-  "Executes body with `*exception-base-class*` bound to given class.
-  Deprecated due to possible problems with multi-threaded code. Use `call-with` to achieve same behavior with thread-safety"
-  {:style/indent 1
-   :deprecated "2.0"}
-  [exception-base-class & body]
-  `(binding [*catch-from* ~exception-base-class]
-     ~@body))
-
-(defmacro ignoring
-  "Executes body with `*ignored-exceptions*` bound to given value.
-  Deprecated due to possible problems with multi-threaded code. Use `call-with` to achieve same behavior with thread-safety"
-  {:style/indent 1
-   :deprecated "2.0"}
-  [ignored-exceptions & body]
-  `(binding [*ignored-exceptions* ~ignored-exceptions]
-     ~@body))
-
-;; checking
+(extend-protocol ErrorHandling
+  java.lang.Throwable
+  (handle [t] t))
 
 (defn fail?
   "Checks if value is exception of given class(optional, defaults to Throwable)"
@@ -59,16 +14,6 @@
   ([ex-class t]
    {:pre [(isa? ex-class Throwable)]}
    (isa? (class t) ex-class)))
-
-(defn ignored?
-  "Checks if exception should be ignored"
-  [t]
-  {:pre [(instance? Throwable t)]}
-  (let [ex-class (class t)]
-    (or (not (isa? ex-class *catch-from*))
-        (some (partial isa? ex-class) *ignored-exceptions*))))
-
-;; construction
 
 (defn fail-with
   "Constructs `Fail` with given options. Stacktrace is disabled by default"
@@ -83,20 +28,12 @@
   [{:keys [trace?] :or {trace? true} :as options}]
   (throw (fail-with (assoc options :trace? trace?))))
 
-;; pipeline
-
-(def ^:dynamic *default-handler*
-  "Default handler for processing caught exceptions. When caught an exception
-   which class is `*catch-from*` or a subclass of it, and is not listed in `*ignored-exceptions*`(and is not a subclass of any classes listed there)
-   returns instance of caught exception, otherwise throws it"
-  (fn [t] (if (ignored? t) (throw t) t)))
-
 (defn call
   "Calls given function with supplied args in `try/catch` block, then calls `*default-handler*` on caught exception. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
-      (*default-handler* t))))
+      (handle t))))
 
 (defn call-with
   "Calls given function with supplied args in `try/catch` block, then calls handler on caught exception. If no exception has caught during function call returns its result"
@@ -146,8 +83,6 @@
   {:pre [(isa? ex-class Throwable)]}
   (if (isa? (class value) ex-class) (f value) value))
 
-;; flet
-
 (defmacro ^:no-doc flet*
   [handler bindings & body]
   (if-let [[bind-name expression] (first bindings)]
@@ -161,31 +96,6 @@
   {:style/indent 1}
   [bindings & body]
   (let [handler-given? (= (first bindings) :handler)
-        handler (if handler-given? (second bindings) *default-handler*)
+        handler (if handler-given? (second bindings) handle)
         bindings (if handler-given? (rest (rest bindings)) bindings)]
     `(flet* ~handler ~(partition 2 bindings) ~@body)))
-
-;; legacy construction
-
-(defn fail
-  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
-  Deprecated, use `ex-info` instead"
-  {:deprecated "2.0"}
-  ([] (ex-info nil {}))
-  ([msg-or-data]
-   (if (string? msg-or-data)
-     (ex-info msg-or-data {})
-     (fail nil msg-or-data)))
-  ([msg data]
-   {:pre [(or (nil? msg) (string? msg))]}
-   (ex-info msg (if (map? data) data {::data data})))
-  ([msg data cause]
-   {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
-   (ex-info msg (if (map? data) data {::data data}) cause)))
-
-(defn fail!
-  "Constructs `fail` with given args and throws it.
-  Deprecated, use `ex-info` with `throw` instead"
-  {:deprecated "2.0"}
-  [& args]
-  (throw (apply fail args)))
