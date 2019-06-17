@@ -97,6 +97,6 @@
   {:style/indent 1}
   [bindings & body]
   (let [handler-given? (= (first bindings) :handler)
-        handler (if handler-given? (second bindings) handle)
+        handler (if handler-given? (second bindings) #(handle %))
         bindings (if handler-given? (rest (rest bindings)) bindings)]
     `(flet* ~handler ~(partition 2 bindings) ~@body)))
