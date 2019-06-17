@@ -2,6 +2,7 @@
   (:import [dawcs.flow Fail]))
 
 (defprotocol ErrorHandling
+  "Defines behavior for handling each class of exceptions"
   (handle [t]))
 
 (extend-protocol ErrorHandling
@@ -9,7 +10,7 @@
   (handle [t] t))
 
 (defn fail?
-  "Checks if value is exception of given class(optional, defaults to Throwable)"
+  "Checks if value is exception of given class(optional, defaults to `Throwable`)"
   ([t] (fail? Throwable t))
   ([ex-class t]
    {:pre [(isa? ex-class Throwable)]}
@@ -29,7 +30,7 @@
   (throw (fail-with (assoc options :trace? trace?))))
 
 (defn call
-  "Calls given function with supplied args in `try/catch` block, then calls `*default-handler*` on caught exception. If no exception has caught during function call returns its result"
+  "Calls given function with supplied args in `try/catch` block, then calls `ErrorHandling/handle` on caught exception. If no exception has caught during function call returns its result"
   [f & args]
   (try (apply f args)
     (catch java.lang.Throwable t
@@ -66,13 +67,13 @@
   (if (fail? value) (call f value) value))
 
 (defn thru
-  "Applies f to value (for side effects). Returns value. Works similar to doto, but accepts function as first arg"
+  "Applies f to value (for side effects). Returns value. Works similar to `doto`, but accepts function as first arg"
   [f value]
   (f value)
   value)
 
 (defn thru-call
-  "Applies f to value wrapped to call (for side effects). Returns value. Works similar to doto, but accepts function as first arg. Please not that exception thrown inside of function will be silently ignored by default"
+  "Applies f to value wrapped to `call` (for side effects). Returns value. Works similar to `doto`, but accepts function as first arg. Please not that exception thrown inside of function will be silently ignored by default"
   [f value]
   (call f value)
   value)
@@ -92,7 +93,7 @@
     `(call-with ~handler (fn [] ~@body))))
 
 (defmacro flet
-  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with `*default-handler*`. If `fail?` value returned from binding evaluation, it's returned immediately and all other bindings and body are skipped. May use custom exception handler passed as first binding with name :handler"
+  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `ErrorsHandling/handle`). If value returned from binding evaluation is `fail?`, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:handler`"
   {:style/indent 1}
   [bindings & body]
   (let [handler-given? (= (first bindings) :handler)
