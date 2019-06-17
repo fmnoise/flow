@@ -16,14 +16,6 @@
   (testing "with wrong class argument"
     (is (thrown? AssertionError (f/fail? String (Exception. "oops"))))))
 
-(deftest ignored?--test
-  (f/catching RuntimeException
-    (f/ignoring #{NullPointerException}
-      (is (f/ignored? (Throwable. "oops")))
-      (is (f/ignored? (NullPointerException. "oops")))
-      (is (not (f/ignored? (ArithmeticException. "oops"))))
-      (is (thrown? AssertionError (f/ignored? 42))))))
-
 (deftest fail-with--test
   (testing "with empty map"
     (let [e (f/fail-with {})]
@@ -223,53 +215,10 @@
                                                   y 0]
                                            (/ x y))))))))
 
-(deftest base-exception-class--test
-  (let [f (fn [& _] (throw (Throwable. "oops")))]
-    (f/catching Exception
-      (is (thrown? Throwable (f/call f)))
-      (is (thrown? Throwable (f/then f 1)))
-      (is (f/fail? (f/call #(throw (Exception. "oops"))))))))
-
-(deftest ignored-exceptions--test
-  (f/ignoring #{Exception}
-    (is (thrown? IllegalArgumentException (f/call #(throw (IllegalArgumentException. "oops")))))
-    (is (f/fail? (f/call #(throw (Throwable. "oops")))))))
-
-(deftest fail--test
-  (testing "with 0 arguments"
-    (let [e (f/fail)
-          m (Throwable->map e)]
-      (is (= clojure.lang.ExceptionInfo (class e)))
-      (is (= nil (:cause m)))
-      (is (= {} (:data m)))))
-
-  (testing "with 1 argument"
-    (testing "with string argument"
-      (let [e (f/fail "oops")
-            m (Throwable->map e)]
-        (is (= clojure.lang.ExceptionInfo (class e)))
-        (is (= "oops" (:cause m)))
-        (is (= {} (:data m)))))
-    (testing "with non-string argument"
-      (testing "with map agrument"
-        (let [e (f/fail {:value 1})
-              m (Throwable->map e)]
-          (is (= clojure.lang.ExceptionInfo (class e)))
-          (is (nil? (:cause m)))
-          (is (= {:value 1} (:data m)))))
-      (testing "with non-map agrument"
-        (let [e (f/fail 29)
-              m (Throwable->map e)]
-          (is (= clojure.lang.ExceptionInfo (class e)))
-          (is (nil? (:cause m)))
-          (is (= {::f/data 29} (:data m)))))))
-
-  (testing "with 2 arguments"
-    (testing "with 2nd map argument"
-      (let [m (-> (f/fail "oops" {:a 1}) Throwable->map)]
-        (is (= "oops" (:cause m)))
-        (is (= {:a 1} (:data m)))))
-    (testing "with 2nd non-map argument"
-      (let [m (-> (f/fail "oops" 1) Throwable->map)]
-        (is (= "oops" (:cause m)))
-        (is (= {::f/data 1} (:data m)))))))
+(deftest error-handling-protocol--test
+  (extend-protocol f/ErrorHandling
+    NullPointerException
+    (handle [t] (throw t)))
+  (is (f/fail? (f/call 1)))
+  (is (thrown? NullPointerException (f/call + 1 nil)))
+  (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
