@@ -7,9 +7,9 @@
 ## 2.0.0
 
 * **BREAKING!** `then` doesn't wrap to `call` anymore, use `then-call` to achieve that
-* Added call-wrapping `then-call`, `else-call` and `thru-call`
-* Added Fail - custom container for failure representation with ability to skip stacktrace
-* Added `fail-with` and `fail-with!` - map-oriented Fail construction helpers
+* Added `call`-wrapping `then-call`, `else-call` and `thru-call`
+* Added `Fail` - custom container for failure representation with ability to skip stacktrace
+* Added `fail-with` and `fail-with!` - map-oriented `Fail` construction helpers
 * Added `*default-handler*` and `call-with` for more functional and thread-safe exceptions handling
 * Added ability to pass exceptions handler to `flet`
 * Mark `fail`, `fail!`, `catching` and `ignoring` deprecated
