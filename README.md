@@ -19,7 +19,7 @@ Consider trivial example:
       {:error "Missing entity id" :code 400})
     {:error "Login required" :code 401}))
 ```
-Looks ugly enough? Let's add some readability. First, require flow:
+Looks ugly enough? Let's add some readability. First, require `flow`:
 ```clojure
 (require '[dawcs.flow :as flow :refer [then else]])
 ```
@@ -42,7 +42,7 @@ Then let's extract each check to function to make code more clear and testable(n
     entity
     (ex-info "Access denied" {:code 403})))
 ```
-Then let's add error formatting helper to turn ex-info data into desired format:
+Then let's add error formatting helper to turn `ex-info` data into desired format:
 ```clojure
 (defn format-error [^Throwable err]
   (assoc (ex-data err)
@@ -126,7 +126,7 @@ Another case where early return may be useful is `let`:
        (then db-persist))
        (else log-error)))
 ```
-Wrapping function to `call` and throwing inside `let` in order to achieve early return may look ugly and verbose, so `flow` has own version of let - `flet`, which wraps all evaluations to `call`. In case of returning exception instance during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
+Wrapping function to `call` and throwing inside `let` in order to achieve early return may look ugly and verbose, so `flow` has own version of `let` - **flet**, which wraps all evaluations to `call`. In case of returning exception instance during bindings or body evaluation, it's immediately returned, otherwise it works as normal `let`:
 ```clojure
 (flet [a 1 b 2] (+ a b)) ;; => 3
 (flet [a 1 b (ex-info "oops" {:reason "something went wrong"})] (+ a b)) ;; => #error { :cause "oops" ... }
@@ -196,7 +196,7 @@ In both examples above we clearly understand that returned value is an error, so
 
 ### But isn't using exceptions costly?
 
-In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of flow - using exception instance as error value. But we know that constructing exception is costly due to stacktrace creation. Java 7 has a possibility to omit stacktrace creation, but that change to ExceptionInfo was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
+In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of `flow` - using exception instance as error value. But we know that constructing exception is costly due to stacktrace creation. Java 7 has a possibility to omit stacktrace creation, but that change to `ExceptionInfo` was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
 ```clojure
 (fail-with {:msg "User not found" :data {:id 1}}) ;; => #error {:cause "User not found" :data {:id 1} :via [...] :trace []}
 
