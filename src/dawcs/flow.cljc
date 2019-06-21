@@ -154,25 +154,25 @@
 
 ;; legacy
 
-(defn fail
-  "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil).
-  Deprecated, use `ex-info` instead"
-  {:deprecated "2.0"}
-  ([] (ex-info nil {}))
-  ([msg-or-data]
-   (if (string? msg-or-data)
-     (ex-info msg-or-data {})
-     (fail nil msg-or-data)))
-  ([msg data]
-   {:pre [(or (nil? msg) (string? msg))]}
-   (ex-info msg (if (map? data) data {::data data})))
-  ([msg data cause]
-   {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
-   (ex-info msg (if (map? data) data {::data data}) cause)))
+#?(:clj
+   (defn fail
+     "Calls `ex-info` with given msg(optional, defaults to nil), data(optional, defaults to {}) and cause(optional, defaults to nil). Deprecated, use `ex-info` instead"
+     {:deprecated "2.0"}
+     ([] (ex-info nil {}))
+     ([msg-or-data]
+      (if (string? msg-or-data)
+        (ex-info msg-or-data {})
+        (fail nil msg-or-data)))
+     ([msg data]
+      {:pre [(or (nil? msg) (string? msg))]}
+      (ex-info msg (if (map? data) data {::data data})))
+     ([msg data cause]
+      {:pre [(or (nil? msg) (string? msg)) (instance? Throwable cause)]}
+      (ex-info msg (if (map? data) data {::data data}) cause))))
 
-(defn fail!
-  "Constructs `fail` with given args and throws it.
-  Deprecated, use `ex-info` with `throw` instead"
-  {:deprecated "2.0"}
-  [& args]
-  (throw (apply fail args)))
+#?(:clj
+   (defn fail!
+     "Constructs `fail` with given args and throws it. Deprecated, use `ex-info` with `throw` instead"
+     {:deprecated "2.0"}
+     [& args]
+     (throw (apply fail args))))
