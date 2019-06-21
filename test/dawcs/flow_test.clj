@@ -198,30 +198,48 @@
   (testing "with custom handler"
     (let [handler #(throw %)]
       (testing "with no exception"
-        (is (= 6 (f/flet [:handler handler
+        (is (= 6 (f/flet [:caught handler
                           x (+ 1 2)
                           y (+ x 3)]
                    y))))
 
       (testing "with exception in bindings"
-        (is (thrown? ArithmeticException (f/flet [:handler handler
+        (is (thrown? ArithmeticException (f/flet [:caught handler
                                                   x (+ 1 2)
                                                   y (/ x 0)]
                                            y))))
 
       (testing "with exception in body"
-        (is (thrown? ArithmeticException (f/flet [:handler handler
+        (is (thrown? ArithmeticException (f/flet [:caught handler
                                                   x (+ 1 2)
                                                   y 0]
                                            (/ x y))))))))
 
-(deftest error-handling-protocol--test
-  (extend-protocol f/ErrorHandling
+(deftest catch-protocol--test
+  (extend-protocol f/Catch
     NullPointerException
-    (handle [t] (throw t)))
+    (caught [t] (throw t)))
   (is (f/fail? (f/call 1)))
   (is (thrown? NullPointerException (f/call + 1 nil)))
   (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
+
+(deftest flow-protocol--test
+  (defrecord Left [error])
+  (defrecord Right [value])
+
+  (extend-protocol f/Flow
+    Left
+    (on-success [this _] this)
+    (on-failure [this f] (f (ex-info "Either.Left" this)))
+
+    Right
+    (on-success [t f] (f (:value t)))
+    (on-failure [t _] is))
+
+  (is (= 2 (f/on-success (Right. 1) inc)))
+  (is (= (Right. 1) (f/on-failure (Right. 1) (constantly :error))))
+  (is (= (Left. "oops") (f/on-success (Left. "oops") inc)))
+  (is (= {:error "oops"} (f/on-failure (Left. "oops") #(.getData %)))))
 
 (deftest fail--test
   (testing "with 0 arguments"
