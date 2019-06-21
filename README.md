@@ -162,7 +162,7 @@ So previous example can be simplified:
 Example above may be used during system startup to perform global change, but if you need to change behavior in certain block of code there's **call-with** which works similar to `call` but its first argument is handler - function which is called on caught exception:
 ```clojure
 (defn handler [e]
-  (if (instance? clojure.lang.ArityException) (throw e) e))
+  (if (instance? clojure.lang.ArityException e) (throw e) e))
 
 (call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
 ```
