@@ -24,4 +24,12 @@ jobs:
             - ~/.m2
           key: v1-dependencies-{{ checksum "project.clj" }}
 
-      - run: lein test
+      - run:
+          name: "Run Clojure tests"
+          command: lein test
+      - run: npm install karma karma-cljs-test --save-dev
+      - run: sudo npm install -g karma-cli
+      - run: npm install karma-chrome-launcher --save-dev
+      - run:
+          name: "Run ClojureScript tests"
+          command: lein doo chrome-headless test once
