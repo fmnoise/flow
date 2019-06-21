@@ -70,7 +70,8 @@
   (loop [res (on-success v f)
          chain fs]
     (if (seq chain)
-      (recur (on-success res (first chain)) (rest chain))
+      (recur (on-success res (first chain))
+             (rest chain))
       res)))
 
 (defn call
