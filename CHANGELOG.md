@@ -2,7 +2,6 @@
 
 * **BREAKING!** new protocol-based implementation for setting up errors handling (default behavior is still the same though)
 * **BREAKING!** removed all vars, functions and macros for setting up errors handling: `*catch-from*`, `*ignored-exceptions*`, `*default-handler*`, `catching`, `ignoring`, `catch-from!`, `ignore-exceptions!`, `add-ignored-exceptions!`, `ignored?`
-* **BREAKING!** removed deprecated `ex-info` construction helpers `fail` and `fail!`
 
 ## 2.0.0
 

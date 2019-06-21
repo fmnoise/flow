@@ -222,3 +222,42 @@
   (is (f/fail? (f/call 1)))
   (is (thrown? NullPointerException (f/call + 1 nil)))
   (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
+
+(deftest fail--test
+  (testing "with 0 arguments"
+    (let [e (f/fail)
+          m (Throwable->map e)]
+      (is (= clojure.lang.ExceptionInfo (class e)))
+      (is (= nil (:cause m)))
+      (is (= {} (:data m)))))
+
+  (testing "with 1 argument"
+    (testing "with string argument"
+      (let [e (f/fail "oops")
+            m (Throwable->map e)]
+        (is (= clojure.lang.ExceptionInfo (class e)))
+        (is (= "oops" (:cause m)))
+        (is (= {} (:data m)))))
+    (testing "with non-string argument"
+      (testing "with map agrument"
+        (let [e (f/fail {:value 1})
+              m (Throwable->map e)]
+          (is (= clojure.lang.ExceptionInfo (class e)))
+          (is (nil? (:cause m)))
+          (is (= {:value 1} (:data m)))))
+      (testing "with non-map agrument"
+        (let [e (f/fail 29)
+              m (Throwable->map e)]
+          (is (= clojure.lang.ExceptionInfo (class e)))
+          (is (nil? (:cause m)))
+          (is (= {::f/data 29} (:data m)))))))
+
+  (testing "with 2 arguments"
+    (testing "with 2nd map argument"
+      (let [m (-> (f/fail "oops" {:a 1}) Throwable->map)]
+        (is (= "oops" (:cause m)))
+        (is (= {:a 1} (:data m)))))
+    (testing "with 2nd non-map argument"
+      (let [m (-> (f/fail "oops" 1) Throwable->map)]
+        (is (= "oops" (:cause m)))
+        (is (= {::f/data 1} (:data m)))))))
