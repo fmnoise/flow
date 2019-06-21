@@ -7,14 +7,7 @@
     (is (not (f/fail? 42))))
 
   (testing "with exception argument"
-    (is (f/fail? (Exception. "oops"))))
-
-  (testing "with class argument"
-    (is (f/fail? Exception (NullPointerException. "oops")))
-    (is (not (f/fail? NullPointerException (Exception. "oops")))))
-
-  (testing "with wrong class argument"
-    (is (thrown? AssertionError (f/fail? String (Exception. "oops"))))))
+    (is (f/fail? (Exception. "oops")))))
 
 (deftest fail-with--test
   (testing "with empty map"
@@ -226,16 +219,16 @@
 (defrecord Left [error])
 (defrecord Right [value])
 
-(extend-protocol f/Flow
-  Left
-  (on-success [this _] this)
-  (on-failure [this f] (f (ex-info "Either.Left" this)))
-
-  Right
-  (on-success [t f] (f (:value t)))
-  (on-failure [t _] is))
-
 (deftest flow-protocol--test
+  (extend-protocol f/Flow
+    Left
+    (on-success [this _] this)
+    (on-failure [this f] (f (ex-info "Either.Left" this)))
+
+    Right
+    (on-success [this f] (f (:value this)))
+    (on-failure [this _] this))
+
   (is (= 2 (f/on-success (Right. 1) inc)))
   (is (= (Right. 1) (f/on-failure (Right. 1) (constantly :error))))
   (is (= (Left. "oops") (f/on-success (Left. "oops") inc)))
