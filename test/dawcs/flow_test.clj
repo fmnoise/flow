@@ -232,7 +232,7 @@
   (is (= 2 (f/on-success (Right. 1) inc)))
   (is (= (Right. 1) (f/on-failure (Right. 1) (constantly :error))))
   (is (= (Left. "oops") (f/on-success (Left. "oops") inc)))
-  (is (= {:error "oops"} (f/on-failure (Left. "oops") #(.getData %)))))
+  (is (= "oops" (f/on-failure (Left. "oops") #(-> % .getData :error)))))
 
 (deftest fail--test
   (testing "with 0 arguments"
