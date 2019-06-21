@@ -1,3 +1,11 @@
+## 4.0.0
+
+* **BREAKING!** `ErrorsHandling` protocol renamed to `Catch`, `handle` renamed to `caught`
+* **BREAKING!** `flet` `:handler` parameter renamed to `:caught`
+* New protocol-based implementation for defining failure and non-failure processing
+* Added `chain` - function for applying multiple functions for non-failure results in chain
+* ClojureScript support
+
 ## 3.0.0
 
 * **BREAKING!** new protocol-based implementation for setting up errors handling (default behavior is still the same though)
