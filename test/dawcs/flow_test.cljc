@@ -52,6 +52,11 @@
     (testing "and throwing handler"
       (is (thrown? Exception (f/call-with #(throw %) #(throw (Exception. "oops"))))))))
 
+(deftest chain--test
+  (is (= 5 (f/chain 1 inc (partial * 3) dec)))
+  (let [err (ex-info "oops" {})]
+    (is (= err (f/chain 1 inc (partial * 3) (constantly err) dec)))))
+
 (deftest then--test
   (testing "with non-exception argument"
     (is (= 43 (f/then inc 42))))
