@@ -223,19 +223,19 @@
   (is (thrown? NullPointerException (f/call + 1 nil)))
   (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
 
+(defrecord Left [error])
+(defrecord Right [value])
+
+(extend-protocol f/Flow
+  Left
+  (on-success [this _] this)
+  (on-failure [this f] (f (ex-info "Either.Left" this)))
+
+  Right
+  (on-success [t f] (f (:value t)))
+  (on-failure [t _] is))
+
 (deftest flow-protocol--test
-  (defrecord Left [error])
-  (defrecord Right [value])
-
-  (extend-protocol f/Flow
-    Left
-    (on-success [this _] this)
-    (on-failure [this f] (f (ex-info "Either.Left" this)))
-
-    Right
-    (on-success [t f] (f (:value t)))
-    (on-failure [t _] is))
-
   (is (= 2 (f/on-success (Right. 1) inc)))
   (is (= (Right. 1) (f/on-failure (Right. 1) (constantly :error))))
   (is (= (Left. "oops") (f/on-success (Left. "oops") inc)))
