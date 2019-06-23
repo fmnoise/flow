@@ -72,7 +72,8 @@
          (instance? js/Error (?err t (constantly (js/Error.)))))))
 
 (defn chain
-  "Passes given value through chain of functions. If value is failure or any function in chain returns failure, it's returned and rest of chain is skipped"
+  "Passes given value through chain of functions. If value is an error or any function in chain returns error, it's returned and rest of chain is skipped"
+  {:added "4.0"}
   [v f & fs]
   (loop [res (?ok v f)
          chain fs]
