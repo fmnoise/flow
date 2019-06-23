@@ -82,7 +82,7 @@
       res)))
 
 (defn call
-  "Calls given function with supplied args in `try/catch` block, then calls `Catch/caught` on caught exception. If no exception has caught during function call returns its result"
+  "Calls given function with supplied args in `try/catch` block, then calls `Catch.caught` on caught exception. If no exception has caught during function call returns its result"
   [f & args]
   (try
     (apply f args)
@@ -152,7 +152,7 @@
     `(call-with ~catch-handler (fn [] ~@body))))
 
 (defmacro flet
-  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch/caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
+  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch.caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
   {:style/indent 1}
   [bindings & body]
   (let [handler-given? (= (first bindings) :caught)
