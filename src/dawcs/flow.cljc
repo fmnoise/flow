@@ -46,11 +46,6 @@
      js/Error
      (caught [t] t)))
 
-(defn fail?
-  "Checks if given value is considered as failure"
-  [t]
-  (= ::error (on-failure t (constantly ::error))))
-
 #?(:clj
    (defn fail-with
      "Constructs `Fail` with given options. Stacktrace is disabled by default"
@@ -66,7 +61,19 @@
      [{:keys [trace?] :or {trace? true} :as options}]
      (throw (fail-with (assoc options :trace? trace?)))))
 
-(defn chain [v f & fs]
+(defn fail?
+  "Checks if given value is considered as failure"
+  [t]
+  #?(:clj
+     (or (instance? java.lang.Throwable t)
+         (instance? Fail (on-failure t (constantly (fail-with {})))))
+     :cljs
+     (or (instance? js/Error t)
+         (instance? js/Error (on-failure t (constantly (js/Error.)))))))
+
+(defn chain
+  "Passes given value through chain of functions. If value is failure or any function in chain returns failure, it's returned and rest of chain is skipped"
+  [v f & fs]
   (loop [res (on-success v f)
          chain fs]
     (if (seq chain)
