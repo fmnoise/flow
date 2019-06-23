@@ -2,36 +2,36 @@
   #?(:clj (:import [dawcs.flow Fail])))
 
 (defprotocol Flow
-  (on-success [this f] "if value is not a failure, apply f to it")
-  (on-failure [this f] "if value is a failure, apply f to it"))
+  (?ok [this f] "if value is not an error, apply f to it")
+  (?err [this f] "if value is an error, apply f to it"))
 
 #?(:clj
    (extend-protocol Flow
      java.lang.Object
-     (on-success [this f] (f this))
-     (on-failure [this f] this)
+     (?ok [this f] (f this))
+     (?err [this f] this)
 
      nil
-     (on-success [this f] (f this))
-     (on-failure [this f] this)
+     (?ok [this f] (f this))
+     (?err [this f] this)
 
      java.lang.Throwable
-     (on-success [this f] this)
-     (on-failure [this f] (f this)))
+     (?ok [this f] this)
+     (?err [this f] (f this)))
 
    :cljs
    (extend-protocol Flow
      js/Object
-     (on-success [this f] (f this))
-     (on-failure [this f] this)
+     (?ok [this f] (f this))
+     (?err [this f] this)
 
      nil
-     (on-success [this f] (f this))
-     (on-failure [this f] this)
+     (?ok [this f] (f this))
+     (?err [this f] this)
 
      js/Error
-     (on-success [this f] this)
-     (on-failure [this f] (f this))))
+     (?ok [this f] this)
+     (?err [this f] (f this))))
 
 (defprotocol Catch
   (caught [t] "defines how to process caught exception"))
@@ -66,18 +66,18 @@
   [t]
   #?(:clj
      (or (instance? java.lang.Throwable t)
-         (instance? Fail (on-failure t (constantly (fail-with {})))))
+         (instance? Fail (?err t (constantly (fail-with {})))))
      :cljs
      (or (instance? js/Error t)
-         (instance? js/Error (on-failure t (constantly (js/Error.)))))))
+         (instance? js/Error (?err t (constantly (js/Error.)))))))
 
 (defn chain
   "Passes given value through chain of functions. If value is failure or any function in chain returns failure, it's returned and rest of chain is skipped"
   [v f & fs]
-  (loop [res (on-success v f)
+  (loop [res (?ok v f)
          chain fs]
     (if (seq chain)
-      (recur (on-success res (first chain))
+      (recur (?ok res (first chain))
              (rest chain))
       res)))
 
@@ -101,26 +101,26 @@
 ;; functor
 
 (defn then
-  "If value is not a failure, applies f to it, otherwise returns value"
+  "If value is not an error, applies f to it, otherwise returns value"
   [f value]
-  (on-success value f))
+  (?ok value f))
 
 (defn then-call
-  "If value is not a failure, applies f to it wrapped to `call`, otherwise returns value"
+  "If value is not an error, applies f to it wrapped to `call`, otherwise returns value"
   {:added "2.0"}
   [f value]
-  (on-success value (partial call f)))
+  (?ok value (partial call f)))
 
 (defn else
-  "If value is a failure, calls applies f to it, otherwise returns value"
+  "If value is an error, applies f to it, otherwise returns value"
   [f value]
-  (on-failure value f))
+  (?err value f))
 
 (defn else-call
-  "If value is a failure, applies f to it wrapped to `call`, otherwise returns value"
+  "If value is an error, applies f to it wrapped to `call`, otherwise returns value"
   {:added "2.0"}
   [f value]
-  (on-failure value (partial call f)))
+  (?err value (partial call f)))
 
 (defn thru
   "Applies f to value (for side effects). Returns value. Works similar to `doto`, but accepts function as first arg"
@@ -146,9 +146,8 @@
 (defmacro ^:no-doc flet*
   [catch-handler bindings & body]
   (if-let [[bind-name expression] (first bindings)]
-    `(on-success
-      (call-with ~catch-handler (fn [] ~expression))
-      (fn [~bind-name] (flet* ~catch-handler ~(rest bindings) ~@body)))
+    `(?ok (call-with ~catch-handler (fn [] ~expression))
+          (fn [~bind-name] (flet* ~catch-handler ~(rest bindings) ~@body)))
     `(call-with ~catch-handler (fn [] ~@body))))
 
 (defmacro flet
