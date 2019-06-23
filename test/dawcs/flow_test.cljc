@@ -2,12 +2,28 @@
   (:require [clojure.test :refer [deftest testing is]]
             [dawcs.flow :as f]))
 
+(defrecord Left [error]
+  f/Flow
+  (?ok [this _] this)
+  (?err [this f] (f (ex-info "Either.Left" this))))
+
+(defrecord Right [value]
+  f/Flow
+  (?ok [this f] (f (:value this)))
+  (?err [this _] this))
+
 (deftest fail?--test
   (testing "with non-exception argument"
     (is (not (f/fail? 42))))
 
   (testing "with exception argument"
-    (is (f/fail? (Exception. "oops")))))
+    (is (f/fail? (Exception. "oops"))))
+
+  (testing "with custom error class"
+    (is (f/fail? (Left. "uh-oh"))))
+
+  (testing "with custom value class"
+    (is (not (f/fail? (Right. 1))))))
 
 (deftest fail-with--test
   (testing "with empty map"
@@ -163,7 +179,15 @@
 
 (deftest else-if--test
   (testing "with non-exception argument"
-    (is (= 42 (f/else-if NullPointerException (constantly "caught") 42))))
+    (testing "and exception class specification"
+      (is (= 42 (f/else-if NullPointerException
+                           (constantly "caught")
+                           42))))
+
+    (testing "and non-exception class specification"
+      (is (= "hello" (f/else-if String
+                                (constantly "caught")
+                                "hello")))))
 
   (testing "with exception argument"
     (testing "and class specification equal to exception class"
@@ -175,13 +199,13 @@
       (let [err (UnsupportedOperationException. "oops")]
         (is (= err (f/else-if NullPointerException
                               (constantly "caught")
-                              err))))))
+                              err)))))
 
-  (testing "with wrong exeption argument"
-    (is (thrown? AssertionError
-                 (f/else-if String
-                          (constantly "caught")
-                          (UnsupportedOperationException. "oops"))))))
+    (testing "and non-exception class specification"
+      (let [err (UnsupportedOperationException. "oops")]
+        (is (= err (f/else-if String
+                              (constantly "caught")
+                              err)))))))
 
 (deftest flet--test
   (testing "with no exception"
@@ -221,23 +245,11 @@
   (is (thrown? NullPointerException (f/call + 1 nil)))
   (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
 
-(defrecord Left [error])
-(defrecord Right [value])
-
 (deftest flow-protocol--test
-  (extend-protocol f/Flow
-    Left
-    (on-success [this _] this)
-    (on-failure [this f] (f (ex-info "Either.Left" this)))
-
-    Right
-    (on-success [this f] (f (:value this)))
-    (on-failure [this _] this))
-
-  (is (= 2 (f/on-success (Right. 1) inc)))
-  (is (= (Right. 1) (f/on-failure (Right. 1) (constantly :error))))
-  (is (= (Left. "oops") (f/on-success (Left. "oops") inc)))
-  (is (= "oops" (f/on-failure (Left. "oops") #(-> % .getData :error)))))
+  (is (= 2 (f/?ok (Right. 1) inc)))
+  (is (= (Right. 1) (f/?err (Right. 1) (constantly :error))))
+  (is (= (Left. "oops") (f/?ok (Left. "oops") inc)))
+  (is (= "oops" (f/?err (Left. "oops") #(-> % .getData :error)))))
 
 (deftest fail--test
   (testing "with 0 arguments"
