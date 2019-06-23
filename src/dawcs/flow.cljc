@@ -135,12 +135,10 @@
   (call f value)
   value)
 
-#?(:clj
-   (defn else-if
-     "If value is an exception of ex-class, applies f to it, otherwise returns value"
-     [ex-class f value]
-     {:pre [(isa? ex-class Throwable)]}
-     (if (isa? (class value) ex-class) (f value) value)))
+(defn else-if
+  "If value is an error of err-class (or any of its parents), applies f to it, otherwise returns value"
+  [err-class f value]
+  (if (isa? (class value) err-class) (?err value f) value))
 
 ;; flet
 
