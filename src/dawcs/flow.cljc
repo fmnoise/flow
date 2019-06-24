@@ -144,10 +144,17 @@
 
 (defmacro ^:no-doc flet*
   [catch-handler bindings & body]
-  (if-let [[bind-name expression] (first bindings)]
-    `(?ok (call-with ~catch-handler (fn [] ~expression))
-          (fn [~bind-name] (flet* ~catch-handler ~(rest bindings) ~@body)))
-    `(call-with ~catch-handler (fn [] ~@body))))
+  `(try
+     (let ~(loop [bound []
+                  tail bindings]
+             (if-let [[bind-name expression] (first tail)]
+               (recur (into bound `[~bind-name (?err (call-with ~catch-handler (fn [] ~expression))
+                                                     (fn [~'err] #?(:clj (fail-with! {:data {:return ~'err} :trace? false})
+                                                                    :cljs (throw (ex-info "" {:return ~'err})))))])
+                      (rest tail))
+               bound))
+       (try ~@body (catch #?(:clj Throwable :cljs :default) ~'t (~catch-handler ~'t))))
+     (catch #?(:clj Fail :cljs :default) ~'ret (~catch-handler (:return (ex-data ~'ret))))))
 
 (defmacro flet
   "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch.caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
