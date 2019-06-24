@@ -235,7 +235,10 @@
         (is (thrown? ArithmeticException (f/flet [:caught handler
                                                   x (+ 1 2)
                                                   y 0]
-                                           (/ x y))))))))
+                                           (/ x y)))))))
+
+  (testing "duplicate field name and signature error"
+    (is (= 3 (f/flet [a_b 1 a-b 2 c 3] (+ a-b a_b))))))
 
 (deftest catch-protocol--test
   (extend-protocol f/Catch
