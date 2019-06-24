@@ -2,8 +2,8 @@
   #?(:clj (:import [dawcs.flow Fail])))
 
 (defprotocol Flow
-  (?ok [this f] "if value is not an error, apply f to it")
-  (?err [this f] "if value is an error, apply f to it"))
+  (?ok [this f] "if value is not an error, apply f to it, otherwise return value")
+  (?err [this f] "if value is an error, apply f to it, otherwise return value"))
 
 #?(:clj
    (extend-protocol Flow
