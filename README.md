@@ -153,16 +153,16 @@ So previous example can be simplified:
 
 ### Tuning exceptions catching
 
-`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed by extending `ErrorHandling` protocol:
+`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed by extending `Catch` protocol:
 ```clojure
 ;; let's say we want to catch everything starting from Exception but throw NullPointerException
-(extend-protocol flow/ErrorHandling
+(extend-protocol flow/Catch
   Throwable
-  (handle [e] (throw e))
+  (caught [e] (throw e))
   Exception
-  (handle [e] e)
+  (caught [e] e)
   NullPointerException
-  (handle [e] (throw e)))
+  (caught [e] (throw e)))
 
 (call + 1 nil) ;; throws NullPointerException
 ```
@@ -177,13 +177,13 @@ Example above may be used during system startup to perform global change, but if
 Custom handler may be also passed to `flet` in first pair of binding vector:
 ```clojure
 ;; this flet works the same as let if exception occured
-(flet [:handler #(throw %)
+(flet [:caught#(throw %)
        a 1
        b (/ a 0)]
   (+ a b)) ;; throws ArithmeticException
 
 ;; but it can do early return if exception is returned as value
-(flet [:handler #(throw %)
+(flet [:caught #(throw %)
        a 1
        b (ex-info "Something went wrong" {:because "Monday"})]
   (/ a b)) ;; => #error {:cause "Something went wrong" :data {:because "Monday"} ... }
