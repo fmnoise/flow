@@ -148,13 +148,22 @@
      (let ~(loop [bound []
                   tail bindings]
              (if-let [[bind-name expression] (first tail)]
-               (recur (into bound `[~bind-name (?err (call-with ~catch-handler (fn [] ~expression))
-                                                     (fn [~'err] #?(:clj (fail-with! {:data {:return ~'err} :trace? false})
+               (recur (into bound `[~bind-name (?err (try ~expression
+                                                          (catch #?(:clj Throwable :cljs :default) ~'t
+                                                            #?(:clj (fail-with! {:data {:caught ~'t}
+                                                                                 :trace? false})
+                                                               :cljs (throw (ex-info "" {:caught ~'t})))))
+                                                     (fn [~'err] #?(:clj (fail-with! {:data {:return ~'err}
+                                                                                      :trace? false})
                                                                     :cljs (throw (ex-info "" {:return ~'err})))))])
                       (rest tail))
                bound))
        (try ~@body (catch #?(:clj Throwable :cljs :default) ~'t (~catch-handler ~'t))))
-     (catch #?(:clj Fail :cljs :default) ~'ret (~catch-handler (:return (ex-data ~'ret))))))
+     (catch #?(:clj Fail :cljs :default) ~'ret
+       (let [{:keys [~'caught ~'return]} (ex-data ~'ret)]
+         (if ~'caught
+           (~catch-handler ~'caught)
+           ~'return)))))
 
 (defmacro flet
   "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch.caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
