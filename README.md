@@ -2,7 +2,14 @@
 
 ## Usage
 
-[![Current Version](https://clojars.org/dawcs/flow/latest-version.svg)](https://clojars.org/dawcs/flow)
+Leiningen
+```clojure
+[dawcs/flow "3.0.0"]
+```
+deps.edn
+```clojure
+dawcs/flow {:mvn/version "3.0.0"}
+```
 
 ### Motivation
 
