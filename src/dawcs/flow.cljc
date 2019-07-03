@@ -198,3 +198,15 @@
      {:deprecated "2.0"}
      [& args]
      (throw (apply fail args))))
+
+(defn throw!
+  "Functional wrapper for throwing exceptions"
+  {:added "4.0"}
+  [err]
+  (throw err))
+
+(defn ex-info!
+  "Functional wrapper for creating and throwing ex-info"
+  {:added "4.0"}
+  [& args]
+  (throw (apply ex-info args)))
