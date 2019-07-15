@@ -7,6 +7,7 @@
 * Added `chain` - function for applying multiple functions for non-failure results in chain
 * Added `throw!` - functional wrapper for throwing exceptions
 * Added `ex-info!` functional wrapper for creating and throwing `ex-info`
+* Added autocarrying for functors
 * ClojureScript support
 
 ## 3.0.0
