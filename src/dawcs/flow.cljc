@@ -103,42 +103,40 @@
 
 (defn then
   "If value is not an error, applies f to it, otherwise returns value"
-  [f value]
-  (?ok value f))
+  ([f] (partial then f))
+  ([f value] (?ok value f)))
 
 (defn then-call
   "If value is not an error, applies f to it wrapped to `call`, otherwise returns value"
   {:added "2.0"}
-  [f value]
-  (?ok value (partial call f)))
+  ([f] (partial then-call f))
+  ([f value] (?ok value (partial call f))))
 
 (defn else
   "If value is an error, applies f to it, otherwise returns value"
-  [f value]
-  (?err value f))
+  ([f] (partial else f))
+  ([f value] (?err value f)))
 
 (defn else-call
   "If value is an error, applies f to it wrapped to `call`, otherwise returns value"
   {:added "2.0"}
-  [f value]
-  (?err value (partial call f)))
+  ([f] (partial else-call f))
+  ([f value] (?err value (partial call f))))
 
 (defn thru
   "Applies f to value (for side effects). Returns value. Works similar to `doto`, but accepts function as first arg"
-  [f value]
-  (f value)
-  value)
+  ([f] (partial thru f))
+  ([f value] (f value) value))
 
 (defn thru-call
   "Applies f to value wrapped to `call` (for side effects). Returns value. Works similar to `doto`, but accepts function as first arg. Please not that exception thrown inside of function will be silently ignored by default"
-  [f value]
-  (call f value)
-  value)
+  ([f] (partial thru-call f))
+  ([f value] (call f value) value))
 
 (defn else-if
   "If value is an error of err-class (or any of its parents), applies f to it, otherwise returns value"
-  [err-class f value]
-  (if (isa? (class value) err-class) (?err value f) value))
+  ([err-class f] (partial else-if err-class f))
+  ([err-class f value] (if (isa? (class value) err-class) (?err value f) value)))
 
 ;; flet
 
