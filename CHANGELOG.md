@@ -5,6 +5,7 @@
 * **BREAKING!** removed 2-args arity for `fail?`
 * New protocol-based implementation for defining failure and non-failure processing
 * Added `chain` - function for applying multiple functions for non-failure results in chain
+* Added `handle` - function for applying success or error handler depending on value
 * Added `throw!` - functional wrapper for throwing exceptions
 * Added `ex-info!` functional wrapper for creating and throwing `ex-info`
 * Added autocarrying for functors

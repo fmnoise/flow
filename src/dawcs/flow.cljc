@@ -138,6 +138,12 @@
   ([err-class f] (partial else-if err-class f))
   ([err-class f value] (if (isa? (class value) err-class) (?err value f) value)))
 
+(defn handle
+  "Map with :ok, :err keys and a value. If value is an error, runs :err on it, else runs :ok. Both keys default to `identity`"
+  ([opts] (partial handle opts))
+  ([{:keys [ok err] :or {ok identity err identity}} value]
+   (if (fail? value) (err value) (ok value))))
+
 ;; flet
 
 (defmacro ^:no-doc flet*
