@@ -3,35 +3,42 @@
 
 (defprotocol Flow
   (?ok [this f] "if value is not an error, apply f to it, otherwise return value")
-  (?err [this f] "if value is an error, apply f to it, otherwise return value"))
+  (?err [this f] "if value is an error, apply f to it, otherwise return value")
+  (throw! [this] "if value is an error, throw it, otherwise return value"))
 
 #?(:clj
    (extend-protocol Flow
      java.lang.Object
      (?ok [this f] (f this))
      (?err [this f] this)
+     (throw! [this] this)
 
      nil
      (?ok [this f] (f this))
      (?err [this f] this)
+     (throw! [this] this)
 
      java.lang.Throwable
      (?ok [this f] this)
-     (?err [this f] (f this)))
+     (?err [this f] (f this))
+     (throw! [this] (throw this)))
 
    :cljs
    (extend-protocol Flow
      js/Object
      (?ok [this f] (f this))
      (?err [this f] this)
+     (throw! [this] this)
 
      nil
      (?ok [this f] (f this))
      (?err [this f] this)
+     (throw! [this] this)
 
      js/Error
      (?ok [this f] this)
-     (?err [this f] (f this))))
+     (?err [this f] (f this))
+     (throw! [this] (throw this))))
 
 (defprotocol Catch
   (caught [t] "defines how to process caught exception"))
@@ -178,6 +185,12 @@
         bindings (if handler-given? (rest (rest bindings)) bindings)]
     `(flet* ~catch-handler ~(partition 2 bindings) ~@body)))
 
+(defn ex-info!
+  "Functional wrapper for creating and throwing ex-info"
+  {:added "4.0"}
+  [& args]
+  (throw (apply ex-info args)))
+
 ;; legacy
 
 #?(:clj
@@ -202,15 +215,3 @@
      {:deprecated "2.0"}
      [& args]
      (throw (apply fail args))))
-
-(defn throw!
-  "Functional wrapper for throwing exceptions"
-  {:added "4.0"}
-  [err]
-  (throw err))
-
-(defn ex-info!
-  "Functional wrapper for creating and throwing ex-info"
-  {:added "4.0"}
-  [& args]
-  (throw (apply ex-info args)))
