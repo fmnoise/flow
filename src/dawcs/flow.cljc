@@ -25,7 +25,7 @@
 
    :cljs
    (extend-protocol Flow
-     js/Object
+     object
      (?ok [this f] (f this))
      (?err [this f] this)
      (?throw [this] this)
