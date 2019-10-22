@@ -140,10 +140,11 @@
   ([f] (partial thru-call f))
   ([f value] (call f value) value))
 
-(defn else-if
-  "If value is an error of err-class (or any of its parents), applies f to it, otherwise returns value"
-  ([err-class f] (partial else-if err-class f))
-  ([err-class f value] (if (isa? (class value) err-class) (?err value f) value)))
+#?(:clj
+   (defn else-if
+     "If value is an error of err-class (or any of its parents), applies f to it, otherwise returns value"
+     ([err-class f] (partial else-if err-class f))
+     ([err-class f value] (if (isa? (class value) err-class) (?err value f) value))))
 
 (defn handle
   "Map with :ok, :err keys and a value. If value is an error, runs :err on it, else runs :ok. Both keys default to `identity`"
