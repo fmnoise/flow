@@ -109,7 +109,6 @@ And a small cheatsheet to summarize on basic blocks:
 ![cheatsheet](https://raw.githubusercontent.com/fmnoise/flow/master/doc/flow.png)
 
 
-
 ### Early return
 
 Having in mind that `call` will catch exceptions and return them immediately, throwing exception may be used as replacement for `return`:
@@ -189,7 +188,9 @@ Custom handler may be also passed to `flet` in first pair of binding vector:
   (/ a b)) ;; => #error {:cause "Something went wrong" :data {:because "Monday"} ... }
 ```
 
-## How it's different from Either?
+## FAQ
+
+### How it's different from Either?
 
 The core idea of `flow` is clear separation of normal value(everything which is not exception instance) and value which indicates error(exception instance) without involving additional containers. This allows to get rid of redundant abstractions like `Either`, and also prevents mess with value containers (if you've ever seen `Either.Left` inside `Either.Right` you probably know what I'm talking about). Exceptions are already first-class citizens in Java world but are usually combined with side-effect (throwing) for propagation purposes, while `flow` actively promotes more functional usage of it with returning exception instance:
 ```clojure
@@ -201,11 +202,27 @@ The core idea of `flow` is clear separation of normal value(everything which is 
 ```
 In both examples above we clearly understand that returned value is an error, so there's no need to wrap it to any other container like `Either`(also, Clojure's core function `ex-info` is perfect tool for storing additional data in exception instance and it's already available from the box). That means no or minimal rework of existing code in order to get started with `flow`, while `Either` would need wrapping both normal and error values into its corresponding `Right` and `Left` containers. Due to described features `flow` is much easier to introduce into existing project than `Either`.
 
-### But I have a lot of tooling which returns `Either`, how can I integrate it with `flow`?
+### I have some tooling which returns `Either`, how can I integrate it with `flow`?
 
-TODO
+`flow` can be configured to treat not only `Throwable` descendants but any custom classes as error values. The core of `flow` machinery is `Flow` protocol which defines behavior for separation errors and normal values. Let's look to example of some defrecord-based `Either` implementation:
 
-### But isn't using exceptions costly?
+```clojure
+(defrecord Left [error])
+(defrecord Right [value])
+
+(extend-protocol flow/Flow
+  Right
+  (?ok [this f] (f (:value this)))
+  (?err [this _] this)
+  (?throw [this] this)
+
+  Left
+  (?ok [this _] this)
+  (?err [this f] (f (ex-info "Either.Left" this)))
+  (?throw [this] (throw (ex-info "Either.Left" this))))
+```
+
+### Isn't using exceptions costly?
 
 In some of examples above exception instance is constructed and passed through chain without throwing. That's main use-case and ideology of `flow` - using exception instance as error value. But we know that constructing exception is costly due to stacktrace creation. Java 7 has a possibility to omit stacktrace creation, but that change to `ExceptionInfo` was not accepted by the core team (more details [here](https://clojure.atlassian.net/browse/CLJ-2423)) so we ended up creating custom exception class which implements `IExceptionInfo` but can skip stacktrace creation. It's called `Fail` and there's handly constuctor for it:
 ```clojure
@@ -224,9 +241,13 @@ In some of examples above exception instance is constructed and passed through c
 (fail-with! {:msg "User not found" :data {:id 1}})
 ```
 
+## ClojureScript support
+
+Experimental ClojureScript support is added in version 4.0, but it's not battle-tested yet, so feel free to raise an Issue/PR if you face with any problems using it.
+
 ## Status
 
-Most of API is considered stable since version `1.0.0`, despite setup machinery may be changed in next versions. See changelog for the list of breaking changes.
+As of version 4.0 all the deprecated stuff from earlier versions has been removed and there are no plans to extend library anymore soon, so it can be considered mature.
 
 ## Who’s using Flow?
 
