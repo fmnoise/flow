@@ -5,12 +5,14 @@
 (defrecord Left [error]
   f/Flow
   (?ok [this _] this)
-  (?err [this f] (f (ex-info "Either.Left" this))))
+  (?err [this f] (f (ex-info "Either.Left" this)))
+  (?throw [this] (throw (ex-info "Either.Left" this))))
 
 (defrecord Right [value]
   f/Flow
   (?ok [this f] (f (:value this)))
-  (?err [this _] this))
+  (?err [this _] this)
+  (?throw [this] this))
 
 (deftest fail?--test
   (testing "with non-exception argument"
@@ -74,19 +76,23 @@
     (is (= err (f/chain 1 inc (partial * 3) (constantly err) dec)))))
 
 (deftest then--test
-  (testing "with non-exception argument"
+  (testing "with non-fail argument"
     (is (= 43 (f/then inc 42))))
 
-  (testing "with exception argument"
+  (testing "with fail argument"
     (let [err (Exception. "oops")]
-      (is (= err (f/then (constantly "ok") err)))))
+      (is (= err (f/then (constantly "ok") err))))
+
+    (testing "using custom fail class"
+      (is (= 2 (f/then inc (Right. 1))))
+      (is (= (Left. "uh-oh") (f/then (constantly "ok") (Left. "uh-oh"))))))
 
   (testing "with exception thrown inside of function "
     (testing "and non-exception argument"
       (let [err (Exception. "oops")]
         (is (thrown? Exception (f/then (fn [_] (throw err)) 21)))))
 
-    (testing "and exception argument"
+    (testing "and fail argument"
       (let [err (Exception. "uh-oh")]
         (is (= err (f/then (fn [_] (throw (Exception. "oops"))) err)))))))
 
@@ -96,30 +102,38 @@
 
   (testing "with exception argument"
     (let [err (Exception. "oops")]
-      (is (= err (f/then-call (constantly "ok") err)))))
+      (is (= err (f/then-call (constantly "ok") err))))
+
+    (testing "using custom fail class"
+      (is (= 2 (f/then-call inc (Right. 1))))
+      (is (= (Left. "uh-oh") (f/then (constantly "ok") (Left. "uh-oh"))))))
 
   (testing "with exception thrown inside of function "
     (testing "and non-exception argument"
       (let [err (Exception. "oops")]
         (is (= err (f/then-call (fn [_] (throw err)) 21)))))
 
-    (testing "and exception argument"
+    (testing "and fail argument"
       (let [err (Exception. "uh-oh")]
         (is (= err (f/then-call (fn [_] (throw (Exception. "oops"))) err)))))))
 
 (deftest else--test
-  (testing "with non-exception argument"
+  (testing "with non-fail argument"
     (is (= 42 (f/else (constantly "caught") 42))))
 
-  (testing "with exception argument"
-    (is (= "caught" (f/else (constantly "caught") (Exception. "oops")))))
+  (testing "with fail argument"
+    (is (= "caught" (f/else (constantly "caught") (Exception. "oops"))))
+
+    (testing "using custom fail class"
+      (is (= (Right. 1) (f/else (constantly "caught") (Right. 1))))
+      (is (= "caught" (f/else (constantly "caught") (Left. "uh-oh"))))))
 
   (testing "with exception thrown inside of function"
     (testing "and non-exception argument"
       (let [err (Exception. "oops")]
         (is (= 21 (f/else (fn [_] (throw err)) 21)))))
 
-    (testing "and exception argument"
+    (testing "and fail argument"
       (let [err (RuntimeException. "uh-oh")]
         (is (thrown? Exception (f/else (fn [_] (throw (Exception. "oops"))) err)))))))
 
@@ -127,8 +141,12 @@
   (testing "with non-exception argument"
     (is (= 42 (f/else-call (constantly "caught") 42))))
 
-  (testing "with exception argument"
-    (is (= "caught" (f/else-call (constantly "caught") (Exception. "oops")))))
+  (testing "with fail argument"
+    (is (= "caught" (f/else-call (constantly "caught") (Exception. "oops"))))
+
+    (testing "using custom fail class"
+      (is (= (Right. 1) (f/else-call (constantly "caught") (Right. 1))))
+      (is (= "caught" (f/else-call (constantly "caught") (Left. "uh-oh"))))))
 
   (testing "with exception thrown inside of function "
     (testing "and non-exception argument"
@@ -267,5 +285,7 @@
 (deftest flow-protocol--test
   (is (= 2 (f/?ok (Right. 1) inc)))
   (is (= (Right. 1) (f/?err (Right. 1) (constantly :error))))
+  (is (= (Right. 1) (f/?throw (Right. 1))))
   (is (= (Left. "oops") (f/?ok (Left. "oops") inc)))
-  (is (= "oops" (f/?err (Left. "oops") #(-> % .getData :error)))))
+  (is (= "oops" (f/?err (Left. "oops") #(-> % .getData :error))))
+  (is (thrown? clojure.lang.ExceptionInfo (f/?throw (Left. "oops")))))
