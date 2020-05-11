@@ -247,7 +247,7 @@ Experimental ClojureScript support is added in version 4.0, but it's not battle-
 
 ## Status
 
-As of version 4.0 all the deprecated stuff from earlier versions has been removed and there are no plans to extend library anymore soon, so it can be considered mature.
+As of version 4.0 all the deprecated stuff from earlier versions has been removed and there are no plans to extend library anymore soon, so it can be considered mature. If you're upgrading from earlier versions, see Changelog for list of breaking changes.
 
 ## Who’s using Flow?
 
