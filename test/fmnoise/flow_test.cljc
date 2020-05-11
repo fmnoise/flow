@@ -1,6 +1,6 @@
-(ns dawcs.flow-test
+(ns fmnoise.flow-test
   (:require [clojure.test :refer [deftest testing is]]
-            [dawcs.flow :as f]))
+            [fmnoise.flow :as f]))
 
 (defrecord Left [error]
   f/Flow
@@ -28,7 +28,7 @@
 (deftest fail-with--test
   (testing "with empty map"
     (let [e (f/fail-with {})]
-      (is (= dawcs.flow.Fail (class e)))
+      (is (= fmnoise.flow.Fail (class e)))
       (is (instance? clojure.lang.IExceptionInfo e) "implements IExceptionInfo")
       (is (instance? RuntimeException e) "extends RuntimeException")
       (is (empty? (.getStackTrace (f/fail-with {}))) "stacktrace is disabled by default")
@@ -44,7 +44,7 @@
       (is (not (empty? (.getStackTrace (f/fail-with {:trace? true}))))))))
 
 (deftest fail-with!--test
-  (is (thrown? dawcs.flow.Fail (f/fail-with! {})))
+  (is (thrown? fmnoise.flow.Fail (f/fail-with! {})))
   (testing "stacktrace is enabled by default"
     (is (not (empty? (.getStackTrace (try (f/fail-with! {}) (catch Throwable e e)))))))
   (testing "with stacktrace disabled"

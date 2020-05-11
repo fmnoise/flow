@@ -1,14 +1,14 @@
-# flow [![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) [![cljdoc badge](https://cljdoc.xyz/badge/dawcs/flow)](https://cljdoc.xyz/d/dawcs/flow/CURRENT)
+# flow [![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) [![cljdoc badge](https://cljdoc.xyz/badge/fmnoise/flow)](https://cljdoc.xyz/d/fmnoise/flow/CURRENT)
 
 ## Usage
 
 Leiningen
 ```clojure
-[dawcs/flow "3.0.0"]
+[fmnoise/flow "4.0.0"]
 ```
 deps.edn
 ```clojure
-dawcs/flow {:mvn/version "3.0.0"}
+fmnoise/flow {:mvn/version "4.0.0"}
 ```
 
 ### Motivation
@@ -28,7 +28,7 @@ Consider trivial example:
 ```
 Looks ugly enough? Let's add some readability. First, require `flow`:
 ```clojure
-(require '[dawcs.flow :as flow :refer [then else]])
+(require '[fmnoise.flow :as flow :refer [then else]])
 ```
 Then let's extract each check to function to make code more clear and testable(notice using `ex-info` as error container with ability to store map with some data in addition to message):
 ```clojure
@@ -106,7 +106,7 @@ If we need to pass both cases (exception instances and normal values) through so
 
 And a small cheatsheet to summarize on basic blocks:
 
-![cheatsheet](https://raw.githubusercontent.com/dawcs/flow/master/doc/flow.png)
+![cheatsheet](https://raw.githubusercontent.com/fmnoise/flow/master/doc/flow.png)
 
 
 

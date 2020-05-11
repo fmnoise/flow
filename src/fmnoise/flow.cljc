@@ -1,5 +1,5 @@
-(ns dawcs.flow
-  #?(:clj (:import [dawcs.flow Fail])))
+(ns fmnoise.flow
+  #?(:clj (:import [fmnoise.flow Fail])))
 
 (defprotocol Flow
   (?ok [this f] "if value is not an error, apply f to it, otherwise return value")
