@@ -9,7 +9,7 @@
 * Added `handle` - function for applying success or error handler depending on value
 * Added `ex-info!` functional wrapper for creating and throwing `ex-info`
 * Added autocarrying for `then`, `else`, `thru` and their call-based versions
-* ClojureScript support
+* ClojureScript support (experimental)
 
 ## 3.0.0
 
