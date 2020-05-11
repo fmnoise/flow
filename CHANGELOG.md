@@ -1,5 +1,6 @@
 ## 4.0.0
 
+* **BREAKING!** new artifact group id
 * **BREAKING!** `ErrorsHandling` protocol renamed to `Catch`, `handle` renamed to `caught`
 * **BREAKING!** `flet` `:handler` parameter renamed to `:caught`
 * **BREAKING!** removed 2-args arity for `fail?`
