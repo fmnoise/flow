@@ -176,7 +176,7 @@ Example above may be used during system startup to perform global change, but if
 Custom handler may be also passed to `flet` in first pair of binding vector:
 ```clojure
 ;; this flet works the same as let if exception occured
-(flet [:caught#(throw %)
+(flet [:caught #(throw %)
        a 1
        b (/ a 0)]
   (+ a b)) ;; throws ArithmeticException
