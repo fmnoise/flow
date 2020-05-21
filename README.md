@@ -149,7 +149,7 @@ So previous example can be simplified:
        (then db-persist)
        (else log-error)))
 ```
-**IMPORTANT!** Currently `flet` doesn't provide possibility to perform any kind of cleanup/finalization (think of `finalize` part of `try/catch` block) in case of creating resources which requires manual state management, but you can handle such cases by using `flet` with `thru` in chain and having closure over bindings for stateful resources (inside `then` in the following example):
+**IMPORTANT!** Currently `flet` doesn't provide possibility to perform any kind of cleanup/finalization in case of early return (think of `finalize` part of `try/catch` block) so creating/allocating resources which require manual state management as `flet` bindings is not good idea. Such cases can be handled by using `flet` with `thru` in chain and having closure over bindings for stateful resources (inside `then` in the following example):
 ```clj
 (->> (create-stateful-resource)
      (then (fn [resource]
