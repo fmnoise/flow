@@ -149,6 +149,16 @@ So previous example can be simplified:
        (then db-persist)
        (else log-error)))
 ```
+**IMPORTANT!** Currently `flet` doesn't provide possibility to perform any kind of cleanup/finalization (think of `finalize` part of `try/catch` block) in case of creating resources which requires manual state management, but you can handle such cases by using `flet` with `thru` in chain and having closure over bindings for stateful resources (inside `then` in the following example):
+```clj
+(->> (create-stateful-resource)
+     (then (fn [resource]
+             (->> (flet [a (some-calculation resource)
+                         b (other-calculation resource)]
+                    (final-calculation a b))
+                  (thru (fn [_] (cleanup-resource resource)))))))
+```
+
 
 ### Tuning exceptions catching
 
@@ -164,6 +174,7 @@ So previous example can be simplified:
   (caught [e] (throw e)))
 
 (call + 1 nil) ;; throws NullPointerException
+(call #(throw (Exception. "Something went wrong"))) ;; => #error {:cause "Something went wrong" ... }
 ```
 Example above may be used during system startup to perform global change, but if you need to change behavior in certain block of code there's **call-with** which works similar to `call` but its first argument is handler - function which is called on caught exception:
 ```clojure
