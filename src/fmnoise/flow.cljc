@@ -152,6 +152,12 @@
   ([{:keys [ok err] :or {ok identity err identity}} value]
    (if (fail? value) (err value) (ok value))))
 
+(defn ex-info!
+  "Functional wrapper for creating and throwing ex-info"
+  {:added "4.0"}
+  [& args]
+  (throw (apply ex-info args)))
+
 ;; flet
 
 (defmacro ^:no-doc flet*
@@ -185,9 +191,3 @@
         catch-handler (if handler-given? (second bindings) #(caught %))
         bindings (if handler-given? (rest (rest bindings)) bindings)]
     `(flet* ~catch-handler ~(partition 2 bindings) ~@body)))
-
-(defn ex-info!
-  "Functional wrapper for creating and throwing ex-info"
-  {:added "4.0"}
-  [& args]
-  (throw (apply ex-info args)))
