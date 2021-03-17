@@ -1,3 +1,7 @@
+## 4.1.0
+
+* **POSSIBLY BREAKING!** `flet` now throws exception in case of non-even bindings count (as `let` does)
+
 ## 4.0.0
 
 * **BREAKING!** new artifact group id
