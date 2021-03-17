@@ -4,11 +4,11 @@
 
 Leiningen
 ```clojure
-[fmnoise/flow "4.0.0"]
+[fmnoise/flow "4.1.0"]
 ```
 deps.edn
 ```clojure
-fmnoise/flow {:mvn/version "4.0.0"}
+fmnoise/flow {:mvn/version "4.1.0"}
 ```
 
 ### Motivation
