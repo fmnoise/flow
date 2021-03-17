@@ -187,6 +187,8 @@
   "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch.caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
   {:style/indent 1}
   [bindings & body]
+  (when-not (even? (count bindings))
+    (throw (IllegalArgumentException. "flet requires an even number of forms in binding vector")))
   (let [handler-given? (= (first bindings) :caught)
         catch-handler (if handler-given? (second bindings) #(caught %))
         bindings (if handler-given? (rest (rest bindings)) bindings)]
