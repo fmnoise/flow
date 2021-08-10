@@ -96,6 +96,27 @@
              (rest chain))
       res)))
 
+(defn select
+  "Processes given collection with given function and returns first non-failure result. If all results are failures, returns nil. Accepts optional 2nd argument with function which will be called on processed collection when no non-failure result was returned. Always returns nil when collection is empty."
+  {:added "4.2"}
+  ([f coll] (select f (constantly nil) coll))
+  ([f fallback-f coll]
+   (when (seq coll)
+     (loop [res (f (first coll))
+            chain (rest coll)
+            results []]
+       (cond
+         (not (fail? res))
+         res
+
+         (seq chain)
+         (recur (f (first chain))
+                (rest chain)
+                (conj results res))
+
+         :else
+         (fallback-f (conj results res)))))))
+
 (defn call
   "Calls given function with supplied args in `try/catch` block, then calls `Catch.caught` on caught exception. If no exception has caught during function call returns its result"
   [f & args]
