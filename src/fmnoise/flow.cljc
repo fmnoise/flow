@@ -54,19 +54,34 @@
      (caught [t] t)))
 
 #?(:clj
-   (defn fail-with
+   (defn ^Fail fail-with
      "Constructs `Fail` with given options. Stacktrace is disabled by default"
      {:added "2.0"}
      [{:keys [msg data cause suppress? trace?] :or {data {} suppress? false trace? false} :as options}]
      {:pre [(or (nil? options) (map? options))]}
-     (Fail. msg data cause suppress? trace?)))
+     (Fail. msg data cause suppress? trace?))
+
+   :cljs
+   (defn fail-with
+     "Constructs `ex-info` with given options"
+     {:added "4.2"}
+     [{:keys [msg data cause] :or {data {}} :as options}]
+     {:pre [(or (nil? options) (map? options))]}
+     (ex-info msg data cause)))
 
 #?(:clj
    (defn fail-with!
-     "Constructs `Fail` with given options and throws it. Stacktrace is enabled by default."
+     "Constructs `Fail` with given options and throws it. Stacktrace is enabled by default. See `fail-with` for more details"
      {:added "2.0"}
-     [{:keys [trace?] :or {trace? true} :as options}]
-     (throw (fail-with (assoc options :trace? trace?)))))
+     [{:keys [msg data cause suppress? trace?] :or {trace? true} :as options}]
+     (throw (fail-with (assoc options :trace? trace?))))
+
+   :cljs
+   (defn fail-with!
+     "Constructs `ex-info` with given options and throws it. See `fail-with` for more details"
+     {:added "4.2"}
+     [{:keys [msg data cause] :as options}]
+     (throw (fail-with options))))
 
 (defn fail?
   "Checks if given value is considered as failure"
