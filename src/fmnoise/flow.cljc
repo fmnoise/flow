@@ -10,16 +10,16 @@
    (extend-protocol Flow
      java.lang.Object
      (?ok [this f] (f this))
-     (?err [this f] this)
+     (?err [this _] this)
      (?throw [this] this)
 
      nil
      (?ok [this f] (f this))
-     (?err [this f] this)
+     (?err [this _] this)
      (?throw [this] this)
 
      java.lang.Throwable
-     (?ok [this f] this)
+     (?ok [this _] this)
      (?err [this f] (f this))
      (?throw [this] (throw this)))
 
@@ -27,16 +27,16 @@
    (extend-protocol Flow
      object
      (?ok [this f] (f this))
-     (?err [this f] this)
+     (?err [this _] this)
      (?throw [this] this)
 
      nil
      (?ok [this f] (f this))
-     (?err [this f] this)
+     (?err [this _] this)
      (?throw [this] this)
 
      js/Error
-     (?ok [this f] this)
+     (?ok [this _] this)
      (?err [this f] (f this))
      (?throw [this] (throw this))))
 
