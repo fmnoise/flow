@@ -175,36 +175,29 @@
 
 ;; flet
 
-(defmacro ^:no-doc flet*
-  [catch-handler bindings & body]
-  `(try
-     (let ~(loop [bound []
-                  tail bindings]
-             (if-let [[bind-name expression] (first tail)]
-               (recur (into bound `[~bind-name (?err (try ~expression
-                                                          (catch #?(:clj Throwable :cljs :default) ~'t
-                                                            #?(:clj (fail-with! {:data {:caught ~'t}
-                                                                                 :trace? false})
-                                                               :cljs (throw (ex-info "" {:caught ~'t})))))
-                                                     (fn [~'err] #?(:clj (fail-with! {:data {:return ~'err}
-                                                                                      :trace? false})
-                                                                    :cljs (throw (ex-info "" {:return ~'err})))))])
-                      (rest tail))
-               bound))
-       (try ~@body (catch #?(:clj Throwable :cljs :default) ~'t (~catch-handler ~'t))))
-     (catch #?(:clj Fail :cljs :default) ~'ret
-       (let [{:keys [~'caught ~'return]} (ex-data ~'ret)]
-         (if ~'caught
-           (~catch-handler ~'caught)
-           ~'return)))))
-
-(defmacro flet
-  "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `call-with` with default handler (defined with `Catch.caught`). If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped. Custom exception handler function may be passed as first binding with name `:caught`"
-  {:style/indent 1}
-  [bindings & body]
-  (when-not (even? (count bindings))
-    (throw (IllegalArgumentException. "flet requires an even number of forms in binding vector")))
-  (let [handler-given? (= (first bindings) :caught)
-        catch-handler (if handler-given? (second bindings) #(caught %))
-        bindings (if handler-given? (rest (rest bindings)) bindings)]
-    `(flet* ~catch-handler ~(partition 2 bindings) ~@body)))
+#?(:clj
+   (defmacro flet
+     "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `try/catch` and handles all thrown exceptions with `Catch.caught`. If value returned from binding evaluation is failure, it's returned immediately and all other bindings and body are skipped."
+     {:style/indent 1}
+     [bindings & body]
+     (when-not (even? (count bindings))
+       (throw (IllegalArgumentException. "flet requires an even number of forms in binding vector")))
+     `(try
+        (let ~(loop [bound []
+                     tail (partition 2 bindings)]
+                (if-let [[bind-name expression] (first tail)]
+                  (recur (into bound `[~(symbol (name bind-name)) (?err
+                                                                   (try ~expression
+                                                                        (catch Throwable ~'t
+                                                                          (fail-with! {:data {:thrown ~'t} :trace? false})))
+                                                                   (fn [~'err] (fail-with! {:data {:returned ~'err} :trace? false})))])
+                         (rest tail))
+                  bound))
+          (try ~@body
+               (catch Throwable ~'t
+                 (fail-with! {:data {:thrown ~'t} :trace? false}))))
+        (catch Fail ~'failure
+          (let [{:keys [~'thrown ~'returned]} (ex-data ~'failure)]
+            (if ~'thrown
+              (caught ~'thrown)
+              ~'returned))))))

@@ -195,21 +195,6 @@ Example above may be used during system startup to perform global change, but if
 (call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
 ```
 
-Custom handler may be also passed to `flet` in first pair of binding vector:
-```clojure
-;; this flet works the same as let if exception occured
-(flet [:caught #(throw %)
-       a 1
-       b (/ a 0)]
-  (+ a b)) ;; throws ArithmeticException
-
-;; but it can do early return if exception is returned as value
-(flet [:caught #(throw %)
-       a 1
-       b (ex-info "Something went wrong" {:because "Monday"})]
-  (/ a b)) ;; => #error {:cause "Something went wrong" :data {:because "Monday"} ... }
-```
-
 ## FAQ
 
 ### How it's different from Either?
