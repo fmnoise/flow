@@ -243,34 +243,6 @@
     (let [err (ex-info "oops" {})]
       (is (= err (f/flet [x (+ 1 2), y 0] err)))))
 
-  (testing "with custom handler"
-    (let [handler #(throw %)]
-      (testing "with no exception"
-        (is (= 6 (f/flet [:caught handler
-                          x (+ 1 2)
-                          y (+ x 3)]
-                   y))))
-
-      (testing "with exception in bindings"
-        (is (thrown? ArithmeticException (f/flet [:caught handler
-                                                  x (+ 1 2)
-                                                  y (/ x 0)]
-                                           y))))
-
-      (testing "with error returned in bindings"
-        (let [err (ex-info "oops" {})]
-          (is (= err (f/flet [:caught handler, x (+ 1 2), y err] x)))))
-
-      (testing "with exception in body"
-        (is (thrown? ArithmeticException (f/flet [:caught handler
-                                                  x (+ 1 2)
-                                                  y 0]
-                                           (/ x y)))))
-
-      (testing "with error returned in body"
-        (let [err (ex-info "oops" {})]
-          (is (= err (f/flet [:caught handler, x (+ 1 2), y 3] err)))))))
-
   (testing "duplicate field name and signature error"
     (is (= 3 (f/flet [a_b 1 a-b 2 c 3] (+ a-b a_b))))))
 
