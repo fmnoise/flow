@@ -59,10 +59,10 @@ And finally we can write pretty readable pipeline(notice thread-last macro usage
 ```clojure
 (defn update-handler [req db]
   (->> (check-user req)
-       (then (fn [_] (check-entity-id req))
+       (then (fn [_] (check-entity-id req)))
        (then #(check-entity-exists db %))
-       (then #(check-entity-access % (:user req))
-       (then #(update-entity! % (:params req))))
+       (then #(check-entity-access % (:user req)))
+       (then #(update-entity! % (:params req)))
        (else format-error)))
 ```
 
