@@ -34,7 +34,7 @@ Then let's extract each check to function to make code more clear and testable(n
 ```clojure
 (defn check-user [req]
   (or (:user req)
-    (ex-info "Login requred" {:code 401})))
+    (ex-info "Login required" {:code 401})))
 
 (defn check-entity-id [req]
   (or (:id req)
