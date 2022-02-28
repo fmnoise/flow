@@ -1,4 +1,4 @@
-(defproject fmnoise/flow "4.1.0"
+(defproject fmnoise/flow "4.2.0"
   :description "Functional style of errors handling (without monads)"
   :url "https://github.com/fmnoise/flow"
   :license {:name "Eclipse Public License"
