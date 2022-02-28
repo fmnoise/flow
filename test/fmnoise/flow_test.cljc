@@ -227,7 +227,8 @@
 
 (deftest flet--test
   (testing "with no exception"
-    (is (= 6 (f/flet [x (+ 1 2), y (+ x 3)] y))))
+    (is (= 6 (f/flet [x (+ 1 2), y (+ x 3)] y)))
+    (is (= 6 (f/flet [{:keys [x y]} {:x 2 :y 3}] (* x y)))))
 
   (testing "with exception in bindings"
     (is (f/fail? (f/flet [x (+ 1 2), y (/ x 0)] y))))

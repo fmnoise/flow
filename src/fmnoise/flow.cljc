@@ -186,11 +186,11 @@
         (let ~(loop [bound []
                      tail (partition 2 bindings)]
                 (if-let [[bind-name expression] (first tail)]
-                  (recur (into bound `[~(symbol (name bind-name)) (?err
-                                                                   (try ~expression
-                                                                        (catch Throwable ~'t
-                                                                          (fail-with! {:data {:thrown ~'t} :trace? false})))
-                                                                   (fn [~'err] (fail-with! {:data {:returned ~'err} :trace? false})))])
+                  (recur (into bound `[~bind-name (?err
+                                                   (try ~expression
+                                                        (catch Throwable ~'t
+                                                          (fail-with! {:data {:thrown ~'t} :trace? false})))
+                                                   (fn [~'err] (fail-with! {:data {:returned ~'err} :trace? false})))])
                          (rest tail))
                   bound))
           (try ~@body
