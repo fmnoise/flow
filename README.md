@@ -1,5 +1,3 @@
-# flow [![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) [![cljdoc badge](https://cljdoc.org/badge/fmnoise/flow)](https://cljdoc.org/d/fmnoise/flow/CURRENT)
-
 ### If you support my open source work, please consider donating Ukrainian Army in fighting with Russian agression. We stay for Freedom and peaceful future, let's stop Putin together! 🇺🇦 🙏
 ```
 IBAN - UA843000010000000047330992708
@@ -11,6 +9,7 @@ ETH - 0x165CD37b4C644C2921454429E7F9358d18A45e14
 USDT (trc20) - TEFccmfQ38cZS1DTZVhsxKVDckA8Y6VfCy
 ```
 
+# flow [![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) [![cljdoc badge](https://cljdoc.org/badge/fmnoise/flow)](https://cljdoc.org/d/fmnoise/flow/CURRENT)
 
 ## Usage
 
