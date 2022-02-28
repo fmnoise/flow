@@ -1,3 +1,7 @@
+## 4.2.1
+
+* Fix `flet` compilation when destructuring
+
 ## 4.2.0
 
 * **BREAKING!** Remove `catch-handler` for `flet`

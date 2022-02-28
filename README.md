@@ -15,11 +15,11 @@ USDT (trc20) - TEFccmfQ38cZS1DTZVhsxKVDckA8Y6VfCy
 
 Leiningen
 ```clojure
-[fmnoise/flow "4.2.0"]
+[fmnoise/flow "4.2.1"]
 ```
 deps.edn
 ```clojure
-fmnoise/flow {:mvn/version "4.2.0"}
+fmnoise/flow {:mvn/version "4.2.1"}
 ```
 
 ### Motivation
