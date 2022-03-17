@@ -246,6 +246,21 @@ In some of examples above exception instance is constructed and passed through c
 (fail-with! {:msg "User not found" :data {:id 1}})
 ```
 
+### All main functions are designed for thread-last macro usage, but I'd like to use thread-first, is it doable?
+
+The core of `flow` machinery is `Flow` protocol which defines functions `?ok` and `?err`. These functions accept value as first agrument so they are suitable for thread-first macro usage:
+
+```clojure
+(defn percent [amount base]
+  (-> (call / amount base)
+      (?ok (partial * 100))
+      (?ok #(str % "%"))
+      (?err ex-message)))
+
+(percent 1 2) ;; => "50%"
+(percent 1 0) ;; => "Divide by zero"
+```
+
 ## ClojureScript support
 
 Experimental ClojureScript support is added in version 4.0, but it's not battle-tested yet, so feel free to raise an Issue/PR if you face with any problems using it.
