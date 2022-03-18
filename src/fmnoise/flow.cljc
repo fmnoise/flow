@@ -4,7 +4,8 @@
 (defprotocol Flow
   (?ok [this f] "if value is not an error, apply f to it, otherwise return value")
   (?err [this f] "if value is an error, apply f to it, otherwise return value")
-  (?throw [this] "if value is an error, throw it, otherwise return value"))
+  (?throw [this] "if value is an error, throw it, otherwise return value")
+  (?catch [this] "defines how to process caught exception"))
 
 #?(:clj
    (extend-protocol Flow
@@ -21,7 +22,8 @@
      java.lang.Throwable
      (?ok [this _] this)
      (?err [this f] (f this))
-     (?throw [this] (throw this)))
+     (?throw [this] (throw this))
+     (?catch [this] this))
 
    :cljs
    (extend-protocol Flow
@@ -38,20 +40,8 @@
      js/Error
      (?ok [this _] this)
      (?err [this f] (f this))
-     (?throw [this] (throw this))))
-
-(defprotocol Catch
-  (caught [t] "defines how to process caught exception"))
-
-#?(:clj
-   (extend-protocol Catch
-     java.lang.Throwable
-     (caught [t] t))
-
-   :cljs
-   (extend-protocol Catch
-     js/Error
-     (caught [t] t)))
+     (?throw [this] (throw this))
+     (?catch [this] this)))
 
 #?(:clj
    (defn ^Fail fail-with
@@ -110,7 +100,7 @@
   (try
     (apply f args)
     (catch #?(:clj java.lang.Throwable :cljs :default) t
-      (caught t))))
+      (?catch t))))
 
 (defn call-with
   "Calls given function with supplied args in `try/catch` block, then calls catch-handler on caught exception. If no exception has caught during function call returns its result"
@@ -199,5 +189,5 @@
         (catch Fail ~'failure
           (let [{:keys [~'thrown ~'returned]} (ex-data ~'failure)]
             (if ~'thrown
-              (caught ~'thrown)
+              (?catch ~'thrown)
               ~'returned))))))

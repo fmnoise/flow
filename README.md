@@ -171,16 +171,16 @@ So previous example can be simplified:
 
 ### Tuning exceptions catching
 
-`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed by extending `Catch` protocol:
+`call` catches `java.lang.Throwable` by default, which may be not what you need, so this behavior can be changed by extending `Flow` protocol:
 ```clojure
 ;; let's say we want to catch everything starting from Exception but throw NullPointerException
-(extend-protocol flow/Catch
+(extend-protocol flow/Flow
   Throwable
-  (caught [e] (throw e))
+  (?catch [e] (throw e))
   Exception
-  (caught [e] e)
+  (?catch [e] e)
   NullPointerException
-  (caught [e] (throw e)))
+  (?catch [e] (throw e)))
 
 (call + 1 nil) ;; throws NullPointerException
 (call #(throw (Exception. "Something went wrong"))) ;; => #error {:cause "Something went wrong" ... }

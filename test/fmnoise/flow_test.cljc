@@ -14,6 +14,10 @@
   (?err [this _] this)
   (?throw [this] this))
 
+(extend-protocol f/Flow
+  NullPointerException
+  (?catch [t] (throw t)))
+
 (deftest fail?--test
   (testing "with non-exception argument"
     (is (not (f/fail? 42))))
@@ -247,18 +251,15 @@
   (testing "duplicate field name and signature error"
     (is (= 3 (f/flet [a_b 1 a-b 2 c 3] (+ a-b a_b))))))
 
-(deftest catch-protocol--test
-  (extend-protocol f/Catch
-    NullPointerException
-    (caught [t] (throw t)))
-  (is (f/fail? (f/call 1)))
-  (is (thrown? NullPointerException (f/call + 1 nil)))
-  (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
-
 (deftest flow-protocol--test
-  (is (= 2 (f/?ok (Right. 1) inc)))
-  (is (= (Right. 1) (f/?err (Right. 1) (constantly :error))))
-  (is (= (Right. 1) (f/?throw (Right. 1))))
-  (is (= (Left. "oops") (f/?ok (Left. "oops") inc)))
-  (is (= "oops" (f/?err (Left. "oops") #(-> % .getData :error))))
-  (is (thrown? clojure.lang.ExceptionInfo (f/?throw (Left. "oops")))))
+  (testing "?catch"
+    (is (f/fail? (f/call 1)))
+    (is (thrown? NullPointerException (f/call + 1 nil)))
+    (is (thrown? NullPointerException (f/flet [x 1 y nil] (+ x y)))))
+  (testing "custom error class"
+    (is (= 2 (f/?ok (Right. 1) inc)))
+    (is (= (Right. 1) (f/?err (Right. 1) (constantly :error))))
+    (is (= (Right. 1) (f/?throw (Right. 1))))
+    (is (= (Left. "oops") (f/?ok (Left. "oops") inc)))
+    (is (= "oops" (f/?err (Left. "oops") #(-> % .getData :error))))
+    (is (thrown? clojure.lang.ExceptionInfo (f/?throw (Left. "oops"))))))
