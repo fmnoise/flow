@@ -76,8 +76,8 @@
     (is (= err (f/chain 1 inc (partial * 3) (constantly err) dec)))))
 
 (deftest switch--test
-  (is (= 5 (f/switch {:ok inc :err ex-message} 4)))
-  (is (= "oops" (f/switch {:ok inc :err ex-message} (ex-info "oops" {})))))
+  (is (= 5 (f/switch {:ok inc :err ex-data} 4)))
+  (is (= {:a 1} (f/switch {:ok inc :err ex-data} (ex-info "oops" {:a 1})))))
 
 (deftest then--test
   (testing "with non-fail argument"
