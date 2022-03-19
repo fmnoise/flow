@@ -161,11 +161,14 @@
      ([err-class f] (partial else-if err-class f))
      ([err-class f value] (if (isa? (class value) err-class) (?err value f) value))))
 
-(defn handle
+(defn switch
   "Accepts map with :ok, :err keys and a value. If value is an error, runs :err on it, else runs :ok. Both keys default to `identity`"
-  ([opts] (partial handle opts))
+  ([opts] (partial switch opts))
   ([{:keys [ok err] :or {ok identity err identity}} value]
    (if (fail? value) (err value) (ok value))))
+
+(def ^{:deprecated "Use `switch` instead"} handle
+  switch)
 
 (defn ex-info!
   "Functional wrapper for creating and throwing ex-info"

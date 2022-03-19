@@ -75,6 +75,10 @@
   (let [err (ex-info "oops" {})]
     (is (= err (f/chain 1 inc (partial * 3) (constantly err) dec)))))
 
+(deftest switch--test
+  (is (= 5 (f/switch {:ok inc :err ex-message} 4)))
+  (is (= "oops" (f/switch {:ok inc :err ex-message} (ex-info "oops" {})))))
+
 (deftest then--test
   (testing "with non-fail argument"
     (is (= 43 (f/then inc 42))))
