@@ -1,4 +1,4 @@
-### If you support my open source work, please consider donating Ukrainian Army in fighting with Russian agression. We stay for Freedom and peaceful future, let's stop Putin together! 🇺🇦 🙏
+### If you support my open source work, please consider donating Ukrainian Army in fighting with russian agression. We stay for Freedom and peaceful future, let's stop putin together! 🇺🇦 🙏
 ```
 IBAN: UA843000010000000047330992708
 BTC: 357a3So9CbsNfBBgFYACGvxxS6tMaDoa1P
