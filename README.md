@@ -273,6 +273,7 @@ As of version 4.0 all the deprecated stuff from earlier versions has been remove
 
 - [Eventum](https://eventum.no) - connects event organizers with their dream venue
 - [Yellowsack](https://yellowsack.com) - dumpster bag & and pick up service
+- [Yellowpay](https://www.getyellowpay.com) - the easy way to pay vendors and suppliers
 
 ## Acknowledgements
 
