@@ -190,7 +190,7 @@ Example above may be used during system startup to perform global change, but if
 (defn handler [e]
   (if (instance? clojure.lang.ArityException e) (throw e) e))
 
-(call-with handler inc) ;; throws ArityException, as inc requires more than 1 argument
+(call-with handler inc) ;; throws ArityException, as inc requires at least 1 argument
 ```
 
 ## FAQ
