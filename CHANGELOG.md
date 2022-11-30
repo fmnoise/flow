@@ -1,3 +1,7 @@
+## 4.2.2
+
+* Added `switch`, deprecated `handle`
+
 ## 4.2.1
 
 * Fix `flet` compilation when destructuring
