@@ -7,20 +7,13 @@ USDT (trc20): TEFccmfQ38cZS1DTZVhsxKVDckA8Y6VfCy
 Apple/Google Pay: https://uahelp.monobank.ua
 ```
 
-# flow [![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) [![cljdoc badge](https://cljdoc.org/badge/fmnoise/flow)](https://cljdoc.org/d/fmnoise/flow/CURRENT)
+# flow 
+[![Clojars Project](https://img.shields.io/clojars/v/fmnoise/flow.svg)](https://clojars.org/fmnoise/flow)
+[![cljdoc badge](https://cljdoc.org/badge/fmnoise/flow)](https://cljdoc.org/d/fmnoise/flow/CURRENT)
+[![CircleCI](https://circleci.com/gh/fmnoise/flow/tree/master.svg?style=svg)](https://circleci.com/gh/fmnoise/flow/tree/master) 
 
-## Usage
 
-Leiningen
-```clojure
-[fmnoise/flow "4.2.2"]
-```
-deps.edn
-```clojure
-fmnoise/flow {:mvn/version "4.2.2"}
-```
-
-### Motivation
+### Usage
 
 Consider trivial example:
 ```clojure
