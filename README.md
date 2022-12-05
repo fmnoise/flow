@@ -13,7 +13,7 @@ Apple/Google Pay: https://uahelp.monobank.ua
 
 Leiningen
 ```clojure
-[fmnoise/flow "4.2.1"]
+[fmnoise/flow "4.2.2"]
 ```
 deps.edn
 ```clojure
