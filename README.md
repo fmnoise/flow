@@ -261,6 +261,21 @@ The core of `flow` machinery is `Flow` protocol which defines functions `?ok` an
 (percent 1 0) ;; => "Divide by zero"
 ```
 
+### Why thread-last was chosen for then/else/thru?
+
+Just because I feel it's more correct English sentence
+```
+find user with email
+then update user
+else log error
+```
+so it becomes
+```clj
+(->> (find-user email)
+     (then update)
+     (else log)
+```
+
 ## ClojureScript support
 
 Experimental ClojureScript support is added in version 4.0, but it's not battle-tested yet, so feel free to raise an Issue/PR if you face with any problems using it.
