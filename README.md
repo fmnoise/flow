@@ -17,7 +17,7 @@ Leiningen
 ```
 deps.edn
 ```clojure
-fmnoise/flow {:mvn/version "4.2.1"}
+fmnoise/flow {:mvn/version "4.2.2"}
 ```
 
 ### Motivation
