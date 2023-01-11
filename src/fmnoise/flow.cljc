@@ -1,4 +1,5 @@
 (ns fmnoise.flow
+  {:clj-kondo/config '{:lint-as {fmnoise.flow/flet clojure.core/let}}}
   #?(:clj (:import [fmnoise.flow Fail])))
 
 (defprotocol Flow
