@@ -1,4 +1,4 @@
-### [🇺🇦 If you want support my open source work, please consider helping my country to defend freedom and right to exist 🇺🇦](https://stand-with-ukraine.pp.ua/)
+### [🇺🇦 If you would like to support my open source work, please consider helping my country to defend freedom and right to exist 🇺🇦](https://stand-with-ukraine.pp.ua/)
 
 # flow 
 [![Clojars Project](https://img.shields.io/clojars/v/fmnoise/flow.svg)](https://clojars.org/fmnoise/flow)
