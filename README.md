@@ -1,11 +1,4 @@
-### If you support my open source work, please consider donating Ukrainian Army in fighting with russian agression. We stay for Freedom and peaceful future, let's stop evil empire together! 🇺🇦 🙏
-```
-IBAN: UA843000010000000047330992708
-BTC: 357a3So9CbsNfBBgFYACGvxxS6tMaDoa1P
-ETH: 0x165CD37b4C644C2921454429E7F9358d18A45e14
-USDT (trc20): TEFccmfQ38cZS1DTZVhsxKVDckA8Y6VfCy
-Apple/Google Pay: https://uahelp.monobank.ua
-```
+### [🇺🇦 If you want support my open source work, please consider helping my country to defend freedom and right to exist 🇺🇦](https://stand-with-ukraine.pp.ua/)
 
 # flow 
 [![Clojars Project](https://img.shields.io/clojars/v/fmnoise/flow.svg)](https://clojars.org/fmnoise/flow)
