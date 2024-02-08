@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/clojure:lein-2.8.1-node-browsers
+      - image: cimg/clojure:1.11.1-openjdk-11.0
 
     working_directory: ~/repo
 
@@ -28,9 +28,3 @@ jobs:
       - run:
           name: "Run Clojure tests"
           command: lein test
-      # - run: npm install karma karma-cljs-test --save-dev
-      # - run: sudo npm install -g karma-cli
-      # - run: npm install karma-chrome-launcher --save-dev
-      # - run:
-      #     name: "Run ClojureScript tests"
-      #     command: lein doo chrome-headless test once
