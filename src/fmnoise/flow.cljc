@@ -205,3 +205,12 @@
             (if ~'thrown
               (caught ~'thrown)
               ~'returned))))))
+
+#?(:clj
+   (defmacro tlet
+     "Flow adaptation of Clojure `let`. Wraps evaluation of each binding to `try/catch` and handles all thrown exceptions with `Catch.caught`. If value returned from binding evaluation is failure, it's thrown immediately and all other bindings and body are skipped."
+     {:style/indent 1}
+     [bindings & body]
+     (when-not (even? (count bindings))
+       (throw (IllegalArgumentException. "tlet requires an even number of forms in binding vector")))
+     `(?throw (flet ~bindings ~@body))))
