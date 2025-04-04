@@ -1,3 +1,7 @@
+## 4.3.0
+
+* Added `tlet` - throwing version of `flet`
+
 ## 4.2.2
 
 * Added `switch`, deprecated `handle`
