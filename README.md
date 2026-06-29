@@ -46,9 +46,9 @@ Then let's extract each check to function to make code more clear and testable(n
 ```
 Then let's add error formatting helper to turn `ex-info` data into desired format:
 ```clojure
-(defn format-error [^Throwable err]
-  (assoc (ex-data err)
-         :error (.getMessage err))) ;; ex-message in clojure 1.10 can be used instead
+(defn format-error [err]
+  {:error/data (ex-data err)
+   :error/message (ex-message err)})
 ```
 And finally we can write pretty readable pipeline(notice thread-last macro usage):
 ```clojure
